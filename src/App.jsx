@@ -39,8 +39,11 @@ function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
   const style = { transform: CSS.Translate.toString(transform), transition, zIndex: isDragging ? 50 : 1, position: 'relative', opacity: isDragging ? 0.9 : 1 };
 
   return (
-    <div ref={setNodeRef} style={style} onClick={() => onClick(task)} className={`group flex items-center justify-between p-3.5 sm:p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-2xl transition-all cursor-pointer border ${isDragging ? 'shadow-2xl border-gray-200 dark:border-gray-700 scale-[1.02]' : 'shadow-sm border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] hover:shadow-md'}`}>
-      <div className="flex items-center gap-3.5 flex-1 overflow-hidden">
+    // ZMĚNA ZDE: rounded-2xl -> rounded-xl
+    <div ref={setNodeRef} style={style} onClick={() => onClick(task)} className={`group flex items-center justify-between p-3.5 sm:p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl transition-all cursor-pointer border ${isDragging ? 'shadow-2xl border-gray-200 dark:border-gray-700 scale-[1.02]' : 'shadow-sm border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] hover:shadow-md'}`}>
+      
+      {/* ZMĚNA ZDE: přidáno min-w-0 */}
+      <div className="flex items-center gap-3.5 flex-1 min-w-0">
         {!isMyDay && (
           <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-300 dark:text-gray-600 hover:text-gray-500 p-1 -ml-2 touch-none">
             <GripVertical size={18} />
@@ -49,13 +52,19 @@ function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
         <button onClick={(e) => { e.stopPropagation(); onToggle(task, e); }} className={`flex-shrink-0 focus:outline-none z-10 transition-transform active:scale-90 ${isMyDay ? 'ml-1' : ''}`}>
           {task.is_done ? <CheckCircle2 size={26} className="text-[#007aff] fill-[#007aff]/10 dark:fill-[#007aff]/20" /> : <Circle size={26} className="text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500" />}
         </button>
-        <div className="flex flex-col truncate flex-1 justify-center">
-          <div className="flex items-center gap-2">
-            <span className={`text-[16px] sm:text-[17px] font-medium transition-all truncate ${task.is_done ? 'text-gray-400 dark:text-gray-600 line-through' : 'text-[#1c1c1e] dark:text-[#f5f5f7]'}`}>{task.text}</span>
-            {task.color && <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5 shadow-sm" style={{ backgroundColor: task.color }}></div>}
+        
+        {/* ZMĚNA ZDE: flex-col a min-w-0 */}
+        <div className="flex flex-col flex-1 justify-center min-w-0">
+          {/* ZMĚNA ZDE: items-start pro lepší vzhled na více řádcích */}
+          <div className="flex items-start gap-2">
+            {/* ZMĚNA ZDE: zrušeno truncate, přidáno break-words whitespace-normal */}
+            <span className={`text-[16px] sm:text-[17px] font-medium transition-all break-words whitespace-normal leading-snug ${task.is_done ? 'text-gray-400 dark:text-gray-600 line-through' : 'text-[#1c1c1e] dark:text-[#f5f5f7]'}`}>
+              {task.text}
+            </span>
+            {task.color && <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5 shadow-sm" style={{ backgroundColor: task.color }}></div>}
           </div>
           {(task.due_date || task.notes) && (
-             <div className="flex items-center gap-3 mt-1 text-[13px] text-gray-400 dark:text-gray-500">
+             <div className="flex items-center gap-3 mt-1.5 text-[13px] text-gray-400 dark:text-gray-500">
                {task.due_date && <span className={`flex items-center gap-1 ${task.due_date === new Date().toISOString().split('T')[0] && !task.is_done ? 'text-[#ff9500] font-medium' : ''}`}><Calendar size={12}/> {new Date(task.due_date).toLocaleDateString('cs-CZ')}</span>}
                {task.notes && <span className="flex items-center gap-1"><AlignLeft size={12}/> Poznámka</span>}
              </div>
@@ -299,7 +308,7 @@ export default function App() {
         {/* OPRAVA: Inset vzhled na PC (padding a rounded), plný displej na mobilu */}
         <div className={`flex-1 flex-col h-full relative ${!activeListId ? 'hidden md:flex' : 'flex'} md:p-3 md:pl-0 lg:p-4 lg:pl-0`}>
           
-          <div className="flex-1 bg-[#f2f2f7] dark:bg-[#000000] md:bg-white md:dark:bg-[#151515] md:rounded-[2.5rem] md:shadow-sm md:border md:border-gray-200/50 dark:md:border-gray-800 flex flex-col overflow-hidden relative">
+          <div className="flex-1 bg-[#f2f2f7] dark:bg-[#000000] md:bg-white md:dark:bg-[#151515] md:rounded-3xl md:shadow-sm md:border md:border-gray-200/50 dark:md:border-gray-800 flex flex-col overflow-hidden relative">
             
             {activeListId ? (
               <>
@@ -360,7 +369,7 @@ export default function App() {
       {/* --- MODAL DETAILU ÚKOLU (OPRAVA NAMAČKANÝCH BOXŮ) --- */}
       {selectedTask && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-0 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#1c1c1e] rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300">
+          <div className="bg-white dark:bg-[#1c1c1e] rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300">
             <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <h3 className="font-semibold text-[17px] text-gray-800 dark:text-[#f5f5f7] truncate pr-4">Detail úkolu</h3>
               <button onClick={() => setSelectedTask(null)} className="p-2 bg-gray-100 dark:bg-[#2c2c2e] hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 transition-colors active:scale-90"><X size={20} /></button>
