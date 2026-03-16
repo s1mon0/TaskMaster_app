@@ -3,18 +3,13 @@
 @tailwind utilities;
 
 html, body {
-  /* Vynutíme nulové okraje, aby nic nevyykukovalo */
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100%;
-
-  /* STOPKA pro ježdění do stran (bílé fleky v rozích) */
-  overflow-x: hidden; 
-
-  /* STOPKA pro gumové odskakování na iPhonu/Androidu */
+  height: 100%; /* Změna z min-height na height */
+  overflow: hidden; /* Tohle je klíč – stránka jako taková se nehne */
+  
   overscroll-behavior: none; 
-
   background-color: #f2f2f7;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

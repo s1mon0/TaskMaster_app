@@ -248,7 +248,7 @@ export default function App() {
 
       {/* --- ZÓNA 1: SEZNAMY --- */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleListDragEnd}>
-        <div className={`w-full md:w-80 lg:w-96 bg-[#f2f2f7] dark:bg-[#151515] border-r border-gray-200 dark:border-[#2c2c2e] flex-col h-full ${activeListId && activeListId !== 'my-day' ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-80 lg:w-96 bg-[#f2f2f7] dark:bg-[#151515] border-r border-gray-200 dark:border-[#2c2c2e] flex-col h-full ${activeListId ? 'hidden md:flex' : 'flex'}`}>
           <div className="px-6 pt-10 pb-4 border-b border-gray-100 dark:border-[#2c2c2e] flex items-center justify-between">
               <div className="flex items-center gap-3">
                   <LayoutList size={28} className="text-[#007aff]" />
@@ -296,7 +296,7 @@ export default function App() {
 
       {/* --- ZÓNA 2: ÚKOLY --- */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
-        <div className={`flex-1 bg-white dark:bg-[#000000] flex-col h-full relative ${!activeListId && window.innerWidth < 768 ? 'hidden' : 'flex'}`}>
+        <div className={`flex-1 bg-white dark:bg-[#000000] flex-col h-full relative ${!activeListId ? 'hidden md:flex' : 'flex'}`}>
           {activeListId ? (
             <>
               <div className="p-6 md:px-10 md:pt-10 border-b border-gray-100 dark:border-[#1c1c1e]">
