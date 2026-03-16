@@ -29,7 +29,7 @@ function SortableListItem({ list, isActive, onClick, onDelete }) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} onClick={() => onClick(list.id)} className={`group flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${isDragging ? 'bg-white dark:bg-[#2c2c2e] shadow-xl border border-gray-200 dark:border-gray-700' : isActive ? 'bg-[#007aff] text-white shadow-md' : 'hover:bg-gray-200/60 dark:hover:bg-[#2c2c2e] active:bg-gray-300 dark:active:bg-[#3a3a3c]'}`}>
+    <div ref={setNodeRef} style={style} onClick={() => onClick(list.id)} className={`group flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${isDragging ? 'bg-white dark:bg-[#2c2c2e] shadow-xl border border-gray-200 dark:border-gray-700' : isActive ? 'bg-[#007aff] text-white shadow-sm' : 'hover:bg-gray-200/60 dark:hover:bg-[#2c2c2e] active:bg-gray-300 dark:active:bg-[#3a3a3c]'}`}>
       <div className="flex items-center flex-1 overflow-hidden">
         <div {...attributes} {...listeners} className={`cursor-grab active:cursor-grabbing touch-none mr-1.5 p-1 -ml-1 transition-opacity opacity-0 group-hover:opacity-100 ${isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
           <GripVertical size={16} />
@@ -223,7 +223,7 @@ export default function App() {
   return (
     <div className="flex h-[100dvh] w-full bg-[#f2f2f7] dark:bg-[#000000] text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden transition-colors duration-300">
       
-      {/* --- SIDEBAR (ZÓNA 1) --- */}
+      {/* --- SIDEBAR --- */}
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleListDragEnd}>
         <div className={`w-full md:w-80 lg:w-[360px] bg-[#f2f2f7] dark:bg-[#000000] flex-col h-full ${activeListId ? 'hidden md:flex' : 'flex'} z-10`}>
           <div className="px-6 pt-12 pb-4 flex items-center justify-between">
@@ -250,32 +250,42 @@ export default function App() {
         </div>
       </DndContext>
 
-      {/* --- HLAVNÍ PLOCHA (ZÓNA 2) --- */}
+      {/* --- HLAVNÍ PLOCHA --- */}
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleTaskDragEnd}>
         <div className={`flex-1 flex-col h-full relative ${!activeListId ? 'hidden md:flex' : 'flex'} md:p-3 md:pl-0 lg:p-4 lg:pl-0`}>
           <div className="flex-1 bg-[#f2f2f7] dark:bg-[#000000] md:bg-white md:dark:bg-[#151515] md:rounded-[24px] md:shadow-sm md:border md:border-gray-200/50 dark:md:border-gray-800 flex flex-col overflow-hidden relative">
             {activeListId ? (
               <>
-                {/* Hlavička */}
-                <div className="px-6 pt-12 pb-6 md:px-12 md:pt-14 z-10 sticky top-0 bg-[#f2f2f7]/80 dark:bg-[#000000]/80 md:bg-white/80 md:dark:bg-[#151515]/80 backdrop-blur-md">
+                {/* Sticky Hlavička s velmi jemným spodním okrajem */}
+                <div className="px-6 pt-12 pb-6 md:px-12 md:pt-14 z-10 sticky top-0 bg-[#f2f2f7]/80 dark:bg-[#000000]/80 md:bg-white/80 md:dark:bg-[#151515]/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 md:border-none">
                   <div className="flex items-center gap-2 mb-6">
                     <button onClick={() => setActiveListId(null)} className="md:hidden flex items-center text-[#007aff] pr-3 -ml-3"><ChevronLeft size={32} /></button>
-                    {/* OPRAVA OŘÍZNUTÉHO G: pb-2 a leading-relaxed */}
-                    <h2 className={`text-3xl md:text-4xl lg:text-[40px] font-bold tracking-tight pb-2 leading-relaxed max-w-lg ${isMyDay ? 'text-[#ff9500]' : ''}`}>{displayedListName}</h2>
+                    <h2 className={`text-3xl md:text-4xl lg:text-[40px] font-bold tracking-tight pb-1 leading-relaxed max-w-lg ${isMyDay ? 'text-[#ff9500]' : ''}`}>{displayedListName}</h2>
                   </div>
                   <div className="flex items-center gap-4"><div className="flex-1 h-2.5 bg-gray-200/60 dark:bg-gray-800 rounded-full overflow-hidden"><div className={`h-full transition-all duration-700 ease-out ${isMyDay ? 'bg-[#ff9500]' : 'bg-[#007aff]'}`} style={{ width: `${progressPercent}%` }}></div></div><span className="text-[15px] font-semibold w-12 text-right">{progressPercent}%</span></div>
                 </div>
 
-                {/* Seznam úkolů - OPRAVA PADDINGU: pb-44 zajistí, že úkoly nezůstanou pod lištou */}
-                <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-44">
-                  <div className="max-w-4xl mx-auto">
+                {/* Seznam úkolů */}
+                <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-32">
+                  <div className="max-w-4xl mx-auto pt-6">
                     <SortableContext items={displayedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>{displayedTasks.map((task) => <SortableTaskItem key={task.id} task={task} onToggle={handleToggleTask} onClick={setSelectedTask} onDelete={handleDeleteTask} isMyDay={isMyDay} />)}</SortableContext>
                   </div>
                 </div>
 
-                {/* Přidávací lišta - APPLE LOOK: backdrop-blur a z-index */}
-                <div className="absolute bottom-0 left-0 w-full p-4 md:p-8 bg-gradient-to-t from-[#f2f2f7] via-[#f2f2f7]/95 dark:from-[#000000] dark:via-[#000000]/95 md:from-white md:via-white/95 md:dark:from-[#151515] to-transparent pt-16 backdrop-blur-sm z-20">
-                  <form onSubmit={handleAddTask} className="relative max-w-4xl mx-auto"><input type="text" placeholder={isMyDay ? "Přidat úkol na dnešek..." : "Přidat úkol..."} value={newTaskText} onChange={(e) => setNewTaskText(e.target.value)} className="w-full bg-white dark:bg-[#1c1c1e] rounded-2xl py-4 pl-5 pr-14 outline-none shadow-2xl shadow-black/10 dark:shadow-black/40 border border-gray-100 dark:border-gray-800 focus:ring-4 focus:ring-[#007aff]/10 transition-all"/><button type="submit" className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-white rounded-xl p-2 shadow-md active:scale-95 ${isMyDay ? 'bg-[#ff9500]' : 'bg-[#007aff]'}`}><Plus size={22} /></button></form>
+                {/* --- OPRAVA: Plovoucí bar bez celoplošné mlhy --- */}
+                <div className="absolute bottom-0 left-0 w-full p-6 pb-10 md:p-10 pointer-events-none z-20">
+                  <form onSubmit={handleAddTask} className="relative max-w-4xl mx-auto shadow-2xl shadow-black/20 rounded-2xl pointer-events-auto">
+                    <input 
+                      type="text" 
+                      placeholder={isMyDay ? "Přidat úkol na dnešek..." : "Přidat nový úkol..."} 
+                      value={newTaskText} 
+                      onChange={(e) => setNewTaskText(e.target.value)} 
+                      className="w-full bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-xl text-[#1c1c1e] dark:text-[#f5f5f7] rounded-2xl py-4 pl-5 pr-14 outline-none border border-gray-200/50 dark:border-gray-800 focus:ring-4 focus:ring-[#007aff]/10 transition-all placeholder:text-gray-400"
+                    />
+                    <button type="submit" className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-white rounded-xl p-2 shadow-md active:scale-95 ${isMyDay ? 'bg-[#ff9500]' : 'bg-[#007aff]'}`}>
+                      <Plus size={22} />
+                    </button>
+                  </form>
                 </div>
               </>
             ) : <div className="h-full flex items-center justify-center text-gray-400">Vyberte seznam vlevo</div>}
