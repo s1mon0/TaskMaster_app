@@ -20,7 +20,7 @@ function SortableListItem({ list, isActive, onClick, onDelete }) {
   const style = { transform: CSS.Translate.toString(transform), transition, zIndex: isDragging ? 50 : 1, opacity: isDragging ? 0.9 : 1, position: 'relative' };
 
   return (
-    <div ref={setNodeRef} style={style} onClick={() => onClick(list.id)} className={`group flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${isDragging ? 'bg-white dark:bg-[#2c2c2e] shadow-xl scale-[1.02] border border-gray-200 dark:border-gray-700' : isActive ? 'bg-[#007aff] text-white shadow-sm' : 'hover:bg-gray-200/60 dark:hover:bg-[#2c2c2e] active:bg-gray-300 dark:active:bg-[#3a3a3c]'}`}>
+    <div ref={setNodeRef} style={style} onClick={() => onClick(list.id)} className={`group flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${isDragging ? 'bg-white dark:bg-[#2c2c2e] shadow-xl border border-gray-200 dark:border-gray-700 opacity-90 relative z-50' : isActive ? 'bg-[#007aff] text-white shadow-sm' : 'hover:bg-gray-200/60 dark:hover:bg-[#2c2c2e] active:bg-gray-300 dark:active:bg-[#3a3a3c]'}`}>
       <div className="flex items-center flex-1 overflow-hidden">
         <div {...attributes} {...listeners} className={`cursor-grab active:cursor-grabbing touch-none mr-1.5 p-1 -ml-1 transition-opacity opacity-0 group-hover:opacity-100 ${isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
           <GripVertical size={16} />
@@ -32,17 +32,14 @@ function SortableListItem({ list, isActive, onClick, onDelete }) {
       </button>
     </div>
   );
-}
 
 function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   const style = { transform: CSS.Translate.toString(transform), transition, zIndex: isDragging ? 50 : 1, position: 'relative', opacity: isDragging ? 0.9 : 1 };
 
   return (
-    // ZMĚNA ZDE: rounded-2xl -> rounded-xl
-    <div ref={setNodeRef} style={style} onClick={() => onClick(task)} className={`group flex items-center justify-between p-3.5 sm:p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl transition-all cursor-pointer border ${isDragging ? 'shadow-2xl border-gray-200 dark:border-gray-700 scale-[1.02]' : 'shadow-sm border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] hover:shadow-md'}`}>
+    <div ref={setNodeRef} style={style} onClick={() => onClick(task)} className={`group flex items-center justify-between p-3.5 sm:p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl transition-all cursor-pointer border ${isDragging ? 'shadow-2xl border-gray-300 dark:border-gray-600 opacity-90 relative z-50' : 'shadow-sm border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] hover:shadow-md'}`}>
       
-      {/* ZMĚNA ZDE: přidáno min-w-0 */}
       <div className="flex items-center gap-3.5 flex-1 min-w-0">
         {!isMyDay && (
           <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-300 dark:text-gray-600 hover:text-gray-500 p-1 -ml-2 touch-none">
@@ -53,11 +50,8 @@ function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
           {task.is_done ? <CheckCircle2 size={26} className="text-[#007aff] fill-[#007aff]/10 dark:fill-[#007aff]/20" /> : <Circle size={26} className="text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500" />}
         </button>
         
-        {/* ZMĚNA ZDE: flex-col a min-w-0 */}
         <div className="flex flex-col flex-1 justify-center min-w-0">
-          {/* ZMĚNA ZDE: items-start pro lepší vzhled na více řádcích */}
           <div className="flex items-start gap-2">
-            {/* ZMĚNA ZDE: zrušeno truncate, přidáno break-words whitespace-normal */}
             <span className={`text-[16px] sm:text-[17px] font-medium transition-all break-words whitespace-normal leading-snug ${task.is_done ? 'text-gray-400 dark:text-gray-600 line-through' : 'text-[#1c1c1e] dark:text-[#f5f5f7]'}`}>
               {task.text}
             </span>
@@ -71,6 +65,12 @@ function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
           )}
         </div>
       </div>
+      
+      <button onClick={(e) => { e.stopPropagation(); onDelete(task.id, e); }} className="p-2 ml-2 rounded-xl transition-colors flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#ff3b30] hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200">
+        <Trash2 size={18} />
+      </button>
+    </div>
+  );
       
       <button onClick={(e) => { e.stopPropagation(); onDelete(task.id, e); }} className="p-2 ml-2 rounded-xl transition-colors flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#ff3b30] hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200">
         <Trash2 size={18} />
@@ -316,9 +316,10 @@ export default function App() {
                 <div className="px-6 pt-12 pb-6 md:px-12 md:pt-14 bg-[#f2f2f7] dark:bg-[#000000] md:bg-white md:dark:bg-[#151515] z-10 sticky top-0">
                   <div className="flex items-center gap-2 mb-6">
                     <button onClick={() => setActiveListId(null)} className="md:hidden flex items-center text-[#007aff] pr-3 -ml-3 active:opacity-50"><ChevronLeft size={32} /></button>
-                    <h2 className={`text-3xl md:text-4xl lg:text-[40px] font-bold tracking-tight truncate max-w-lg ${isMyDay ? 'text-[#ff9500]' : ''}`}>
+                    {/* Odstranili jsme 'truncate' a přidali 'pb-2', aby měly ocásky písmen místo. Text se teď raději zalomí, než aby se ořízl. */}
+                      <h2 className={`text-3xl md:text-4xl lg:text-[40px] font-bold tracking-tight pb-2 max-w-lg leading-tight ${isMyDay ? 'text-[#ff9500]' : ''}`}>
                       {displayedListName}
-                    </h2>
+                      </h2>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex-1 h-2.5 bg-gray-200/60 dark:bg-gray-800 rounded-full overflow-hidden">
