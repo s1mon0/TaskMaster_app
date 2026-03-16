@@ -7,7 +7,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { CSS } from '@dnd-kit/utilities';
 
 const TAG_COLORS = [
-  { id: '', bg: 'bg-gray-200 dark:bg-gray-700', border: 'border-transparent' },
+  { id: '', bg: 'bg-gray-200 dark:bg-gray-800', border: 'border-transparent' },
   { id: '#ff3b30', bg: 'bg-[#ff3b30]', border: 'border-[#ff3b30]' },
   { id: '#ff9500', bg: 'bg-[#ff9500]', border: 'border-[#ff9500]' },
   { id: '#34c759', bg: 'bg-[#34c759]', border: 'border-[#34c759]' },
@@ -15,50 +15,47 @@ const TAG_COLORS = [
   { id: '#af52de', bg: 'bg-[#af52de]', border: 'border-[#af52de]' },
 ];
 
-// --- KOMPONENTA PRO SEZNAM ---
 function SortableListItem({ list, isActive, onClick, onDelete }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: list.id });
   const style = { transform: CSS.Translate.toString(transform), transition, zIndex: isDragging ? 50 : 1, opacity: isDragging ? 0.9 : 1, position: 'relative' };
 
   return (
-    <div ref={setNodeRef} style={style} onClick={() => onClick(list.id)} className={`group flex items-center justify-between p-3.5 rounded-xl transition-all cursor-pointer ${isDragging ? 'bg-white dark:bg-[#2c2c2e] shadow-xl scale-[1.02] border border-gray-200 dark:border-gray-700' : isActive ? 'bg-[#007aff] text-white shadow-md' : 'hover:bg-gray-200/50 dark:hover:bg-[#2c2c2e] active:bg-gray-300 dark:active:bg-[#3a3a3c]'}`}>
+    <div ref={setNodeRef} style={style} onClick={() => onClick(list.id)} className={`group flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${isDragging ? 'bg-white dark:bg-[#2c2c2e] shadow-xl scale-[1.02] border border-gray-200 dark:border-gray-700' : isActive ? 'bg-[#007aff] text-white shadow-sm' : 'hover:bg-gray-200/60 dark:hover:bg-[#2c2c2e] active:bg-gray-300 dark:active:bg-[#3a3a3c]'}`}>
       <div className="flex items-center flex-1 overflow-hidden">
-        <div {...attributes} {...listeners} className={`cursor-grab active:cursor-grabbing touch-none mr-2 p-1 -ml-1 transition-opacity opacity-0 group-hover:opacity-100 ${isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
+        <div {...attributes} {...listeners} className={`cursor-grab active:cursor-grabbing touch-none mr-1.5 p-1 -ml-1 transition-opacity opacity-0 group-hover:opacity-100 ${isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
           <GripVertical size={16} />
         </div>
         <span className="text-[15px] font-medium truncate pr-2 flex-1">{list.name}</span>
       </div>
-      {/* OPRAVA: Ikonka koše je na mobilech vidět vždy (opacity-100), na PC se ukáže na hover (sm:opacity-0 sm:group-hover:opacity-100) */}
-      <button onClick={(e) => { e.stopPropagation(); onDelete(list.id, e); }} className={`p-1 rounded-md transition-colors flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 ${isActive ? 'text-white/80 hover:bg-white/20' : 'text-gray-400 hover:text-[#ff3b30] hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
-        <Trash2 size={18} />
+      <button onClick={(e) => { e.stopPropagation(); onDelete(list.id, e); }} className={`p-1.5 rounded-lg transition-colors flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 ${isActive ? 'text-white/80 hover:bg-white/20' : 'text-gray-400 hover:text-[#ff3b30] hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+        <Trash2 size={16} />
       </button>
     </div>
   );
 }
 
-// --- KOMPONENTA PRO ÚKOL ---
 function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   const style = { transform: CSS.Translate.toString(transform), transition, zIndex: isDragging ? 50 : 1, position: 'relative', opacity: isDragging ? 0.9 : 1 };
 
   return (
-    <div ref={setNodeRef} style={style} onClick={() => onClick(task)} className={`group flex items-center justify-between p-3.5 -mx-3.5 rounded-xl transition-colors border cursor-pointer ${isDragging ? 'bg-white dark:bg-[#1c1c1e] shadow-xl border-gray-200 dark:border-gray-800 scale-[1.02]' : 'hover:bg-gray-50 dark:hover:bg-[#1c1c1e] border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e]'}`}>
+    <div ref={setNodeRef} style={style} onClick={() => onClick(task)} className={`group flex items-center justify-between p-3.5 sm:p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-2xl transition-all cursor-pointer border ${isDragging ? 'shadow-2xl border-gray-200 dark:border-gray-700 scale-[1.02]' : 'shadow-sm border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] hover:shadow-md'}`}>
       <div className="flex items-center gap-3.5 flex-1 overflow-hidden">
         {!isMyDay && (
           <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-300 dark:text-gray-600 hover:text-gray-500 p-1 -ml-2 touch-none">
             <GripVertical size={18} />
           </div>
         )}
-        <button onClick={(e) => { e.stopPropagation(); onToggle(task, e); }} className={`flex-shrink-0 focus:outline-none z-10 ${isMyDay ? 'ml-1' : ''}`}>
-          {task.is_done ? <CheckCircle2 size={24} className="text-[#007aff] fill-[#007aff]/10 dark:fill-[#007aff]/20" /> : <Circle size={24} className="text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500" />}
+        <button onClick={(e) => { e.stopPropagation(); onToggle(task, e); }} className={`flex-shrink-0 focus:outline-none z-10 transition-transform active:scale-90 ${isMyDay ? 'ml-1' : ''}`}>
+          {task.is_done ? <CheckCircle2 size={26} className="text-[#007aff] fill-[#007aff]/10 dark:fill-[#007aff]/20" /> : <Circle size={26} className="text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500" />}
         </button>
-        <div className="flex flex-col truncate flex-1">
+        <div className="flex flex-col truncate flex-1 justify-center">
           <div className="flex items-center gap-2">
-            <span className={`text-[17px] transition-all truncate ${task.is_done ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-[#1c1c1e] dark:text-[#f5f5f7]'}`}>{task.text}</span>
-            {task.color && <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5" style={{ backgroundColor: task.color }}></div>}
+            <span className={`text-[16px] sm:text-[17px] font-medium transition-all truncate ${task.is_done ? 'text-gray-400 dark:text-gray-600 line-through' : 'text-[#1c1c1e] dark:text-[#f5f5f7]'}`}>{task.text}</span>
+            {task.color && <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5 shadow-sm" style={{ backgroundColor: task.color }}></div>}
           </div>
           {(task.due_date || task.notes) && (
-             <div className="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-gray-500">
+             <div className="flex items-center gap-3 mt-1 text-[13px] text-gray-400 dark:text-gray-500">
                {task.due_date && <span className={`flex items-center gap-1 ${task.due_date === new Date().toISOString().split('T')[0] && !task.is_done ? 'text-[#ff9500] font-medium' : ''}`}><Calendar size={12}/> {new Date(task.due_date).toLocaleDateString('cs-CZ')}</span>}
                {task.notes && <span className="flex items-center gap-1"><AlignLeft size={12}/> Poznámka</span>}
              </div>
@@ -66,8 +63,7 @@ function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
         </div>
       </div>
       
-      {/* OPRAVA: Ikonka koše pro smazání úkolu přímo z řádku */}
-      <button onClick={(e) => { e.stopPropagation(); onDelete(task.id, e); }} className="p-1.5 ml-2 rounded-md transition-colors flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#ff3b30] hover:bg-gray-200 dark:hover:bg-gray-700">
+      <button onClick={(e) => { e.stopPropagation(); onDelete(task.id, e); }} className="p-2 ml-2 rounded-xl transition-colors flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#ff3b30] hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200">
         <Trash2 size={18} />
       </button>
     </div>
@@ -129,6 +125,10 @@ export default function App() {
   const handleCreateList = async (e) => {
     e.preventDefault();
     if (!newListName.trim()) return;
+    
+    // Zahození klávesnice na mobilu, aby se layout nerozbil
+    document.activeElement?.blur(); 
+    
     setDbError(null);
     const { data, error } = await supabase.from('lists').insert([{ name: newListName.trim(), position: lists.length }]).select();
     if (error) { setDbError("Nepodařilo se vytvořit seznam: " + error.message); return; }
@@ -170,7 +170,6 @@ export default function App() {
     if (error) setDbError("Chyba při aktualizaci úkolu: " + error.message);
   };
 
-  // NOVÁ FUNKCE PRO SMAZÁNÍ ÚKOLU
   const handleDeleteTask = async (id, e) => {
     if (e) e.stopPropagation();
     setDbError(null);
@@ -178,11 +177,7 @@ export default function App() {
     if (error) { setDbError("Nepodařilo se smazat úkol: " + error.message); return; }
     
     setTasks(tasks.filter(t => t.id !== id));
-    
-    // Pokud jsme smazali úkol, který je zrovna otevřený v okně, tak okno zavřeme
-    if (selectedTask && selectedTask.id === id) {
-      setSelectedTask(null);
-    }
+    if (selectedTask && selectedTask.id === id) setSelectedTask(null);
   };
 
   const handleSaveTaskDetails = async () => {
@@ -231,10 +226,11 @@ export default function App() {
   const displayedListName = isMyDay ? 'Můj den' : lists.find(l => l.id === activeListId)?.name;
   const progressPercent = displayedTasks.length === 0 ? 0 : Math.round((displayedTasks.filter(t => t.is_done).length / displayedTasks.length) * 100);
 
-  if (isLoading) return <div className="h-screen w-full flex flex-col items-center justify-center bg-[#f2f2f7] dark:bg-[#000000]"><Loader2 className="animate-spin h-14 w-14 text-[#007aff]/60" /></div>;
+  if (isLoading) return <div className="h-[100dvh] w-full flex flex-col items-center justify-center bg-[#f2f2f7] dark:bg-[#000000]"><Loader2 className="animate-spin h-14 w-14 text-[#007aff]/60" /></div>;
 
+  // OPRAVA SCROLLOVÁNÍ: h-[100dvh] a overflow-hidden na hlavním obalu
   return (
-    <div className="flex min-h-[100dvh] w-full bg-white dark:bg-[#000000] text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased relative transition-colors duration-300 overflow-x-hidden">
+    <div className="flex h-[100dvh] w-full bg-[#f2f2f7] dark:bg-[#000000] text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden selection:bg-[#007aff]/30 transition-colors duration-300">
       
       {dbError && (
         <div className="absolute top-0 left-0 w-full z-[100] bg-red-500 text-white p-3 flex items-center justify-between shadow-lg">
@@ -246,29 +242,33 @@ export default function App() {
         </div>
       )}
 
-      {/* --- ZÓNA 1: SEZNAMY --- */}
+      {/* --- ZÓNA 1: SIDEBAR (Seznamy) --- */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleListDragEnd}>
-        <div className={`w-full md:w-80 lg:w-96 bg-[#f2f2f7] dark:bg-[#151515] border-r border-gray-200 dark:border-[#2c2c2e] flex-col h-full ${activeListId ? 'hidden md:flex' : 'flex'}`}>
-          <div className="px-6 pt-10 pb-4 border-b border-gray-100 dark:border-[#2c2c2e] flex items-center justify-between">
+        <div className={`w-full md:w-80 lg:w-[360px] bg-[#f2f2f7] dark:bg-[#000000] flex-col h-full ${activeListId ? 'hidden md:flex' : 'flex'} z-10`}>
+          <div className="px-6 pt-12 pb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                  <LayoutList size={28} className="text-[#007aff]" />
-                  <h1 className="text-2xl font-bold tracking-tight">TaskMaster</h1>
+                  <div className="bg-[#007aff] p-2 rounded-xl shadow-sm text-white">
+                    <LayoutList size={22} />
+                  </div>
+                  <h1 className="text-[28px] font-bold tracking-tight">TaskMaster</h1>
               </div>
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#2c2c2e] text-gray-500 dark:text-gray-400 transition-colors">
+              <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 rounded-full bg-white dark:bg-[#1c1c1e] shadow-sm hover:shadow-md text-gray-500 dark:text-gray-400 transition-all active:scale-95">
                 {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
               </button>
           </div>
             
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+          <div className="flex-1 overflow-y-auto px-4 py-2 space-y-8 pb-10">
             <div>
-              <p className="px-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Chytré přehledy</p>
-              <div onClick={() => setActiveListId('my-day')} className={`flex items-center justify-between p-3.5 rounded-xl transition-all cursor-pointer ${isMyDay ? 'bg-[#007aff] text-white shadow-md' : 'hover:bg-gray-200/50 dark:hover:bg-[#2c2c2e] active:bg-gray-300 dark:active:bg-[#3a3a3c]'}`}>
-                <div className="flex items-center gap-3">
-                  <Star size={20} className={isMyDay ? 'text-white' : 'text-[#ff9500]'} />
-                  <span className="text-[15px] font-medium">Můj den</span>
+              <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5">Chytré přehledy</p>
+              <div onClick={() => setActiveListId('my-day')} className={`flex items-center justify-between p-3.5 mx-1 rounded-2xl transition-all cursor-pointer ${isMyDay ? 'bg-white dark:bg-[#1c1c1e] shadow-sm text-[#007aff]' : 'hover:bg-gray-200/50 dark:hover:bg-[#1c1c1e] active:bg-gray-300 dark:active:bg-[#2c2c2e]'}`}>
+                <div className="flex items-center gap-3.5">
+                  <div className={`p-1.5 rounded-lg ${isMyDay ? 'bg-[#007aff]/10 dark:bg-[#007aff]/20' : 'bg-transparent'}`}>
+                    <Star size={20} className={isMyDay ? 'text-[#007aff]' : 'text-[#ff9500]'} />
+                  </div>
+                  <span className={`text-[16px] font-medium ${isMyDay ? 'text-[#1c1c1e] dark:text-white' : ''}`}>Můj den</span>
                 </div>
                 {tasks.filter(t => t.due_date === todayString && !t.is_done).length > 0 && (
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isMyDay ? 'bg-white/20 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
+                  <span className={`text-[13px] font-bold px-2.5 py-1 rounded-full ${isMyDay ? 'bg-[#007aff]/10 text-[#007aff] dark:text-[#007aff]' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
                     {tasks.filter(t => t.due_date === todayString && !t.is_done).length}
                   </span>
                 )}
@@ -276,116 +276,129 @@ export default function App() {
             </div>
 
             <div>
-              <p className="px-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Moje seznamy</p>
+              <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5">Moje seznamy</p>
               <SortableContext items={lists.map(l => l.id)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-1">
+                <div className="space-y-0.5 px-1">
                   {lists.map((list) => (
                     <SortableListItem key={list.id} list={list} isActive={activeListId === list.id} onClick={setActiveListId} onDelete={handleDeleteList} />
                   ))}
                 </div>
               </SortableContext>
               
-              <form onSubmit={handleCreateList} className="mt-2 relative flex items-center gap-2">
-                <input type="text" placeholder="Nový seznam..." value={newListName} onChange={(e) => setNewListName(e.target.value)} className="w-full bg-transparent dark:bg-transparent rounded-xl py-3 pl-3 pr-16 outline-none text-[15px] border border-transparent focus:bg-white dark:focus:bg-[#1c1c1e] focus:border-gray-200 dark:focus:border-[#2c2c2e] focus:ring-2 focus:ring-[#007aff]/30 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600"/>
-                {newListName.trim() && <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-[#007aff] font-semibold text-[15px]">Přidat</button>}
+              <form onSubmit={handleCreateList} className="mt-4 px-1 relative flex items-center gap-2">
+                <input type="text" placeholder="Nový seznam..." value={newListName} onChange={(e) => setNewListName(e.target.value)} className="w-full bg-transparent dark:bg-transparent rounded-2xl py-3.5 pl-4 pr-16 outline-none text-[16px] border border-transparent focus:bg-white dark:focus:bg-[#1c1c1e] focus:shadow-sm transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600"/>
+                {newListName.trim() && <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 text-[#007aff] font-semibold text-[15px] hover:text-[#0056b3] transition-colors">Přidat</button>}
               </form>
             </div>
           </div>
         </div>
       </DndContext>
 
-      {/* --- ZÓNA 2: ÚKOLY --- */}
+      {/* --- ZÓNA 2: HLAVNÍ PLOCHA (Úkoly) - APPLE INSET DESIGN --- */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
-        <div className={`flex-1 bg-white dark:bg-[#000000] flex-col h-full relative ${!activeListId ? 'hidden md:flex' : 'flex'}`}>
-          {activeListId ? (
-            <>
-              <div className="p-6 md:px-10 md:pt-10 border-b border-gray-100 dark:border-[#1c1c1e]">
-                <div className="flex items-center gap-2 mb-4">
-                  <button onClick={() => setActiveListId(null)} className="md:hidden flex items-center text-[#007aff] pr-2 -ml-2"><ChevronLeft size={28} /></button>
-                  <h2 className={`text-3xl md:text-4xl font-bold tracking-tight truncate max-w-lg ${isMyDay ? 'text-[#ff9500]' : ''}`}>
-                    {displayedListName}
-                  </h2>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 bg-gray-100 dark:bg-[#1c1c1e] rounded-full overflow-hidden">
-                    <div className={`h-full transition-all duration-500 ease-out rounded-full ${isMyDay ? 'bg-[#ff9500]' : 'bg-[#007aff]'}`} style={{ width: `${progressPercent}%` }}></div>
+        {/* OPRAVA: Inset vzhled na PC (padding a rounded), plný displej na mobilu */}
+        <div className={`flex-1 flex-col h-full relative ${!activeListId ? 'hidden md:flex' : 'flex'} md:p-3 md:pl-0 lg:p-4 lg:pl-0`}>
+          
+          <div className="flex-1 bg-[#f2f2f7] dark:bg-[#000000] md:bg-white md:dark:bg-[#151515] md:rounded-[2.5rem] md:shadow-sm md:border md:border-gray-200/50 dark:md:border-gray-800 flex flex-col overflow-hidden relative">
+            
+            {activeListId ? (
+              <>
+                {/* Hlavička úkolů */}
+                <div className="px-6 pt-12 pb-6 md:px-12 md:pt-14 bg-[#f2f2f7] dark:bg-[#000000] md:bg-white md:dark:bg-[#151515] z-10 sticky top-0">
+                  <div className="flex items-center gap-2 mb-6">
+                    <button onClick={() => setActiveListId(null)} className="md:hidden flex items-center text-[#007aff] pr-3 -ml-3 active:opacity-50"><ChevronLeft size={32} /></button>
+                    <h2 className={`text-3xl md:text-4xl lg:text-[40px] font-bold tracking-tight truncate max-w-lg ${isMyDay ? 'text-[#ff9500]' : ''}`}>
+                      {displayedListName}
+                    </h2>
                   </div>
-                  <span className="text-sm font-medium text-gray-400 dark:text-gray-500 w-10 text-right">{progressPercent}%</span>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6 md:px-10">
-                <div className="max-w-3xl">
-                  {displayedTasks.length === 0 ? (
-                    <div className="pt-20 text-center text-gray-400 dark:text-gray-600">
-                      {isMyDay ? <Star size={48} className="mx-auto mb-4 opacity-30 text-[#ff9500]" /> : <LayoutList size={48} className="mx-auto mb-4 opacity-30" />}
-                      <p>Žádné úkoly k zobrazení.</p>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 h-2.5 bg-gray-200/60 dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div className={`h-full transition-all duration-700 ease-out rounded-full ${isMyDay ? 'bg-[#ff9500]' : 'bg-[#007aff]'}`} style={{ width: `${progressPercent}%` }}></div>
                     </div>
-                  ) : (
-                    <SortableContext items={displayedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                      {displayedTasks.map((task) => (
-                        <SortableTaskItem key={task.id} task={task} onToggle={handleToggleTask} onClick={setSelectedTask} onDelete={handleDeleteTask} isMyDay={isMyDay} />
-                      ))}
-                    </SortableContext>
-                  )}
+                    <span className="text-[15px] font-semibold text-gray-400 dark:text-gray-500 w-12 text-right">{progressPercent}%</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="p-6 md:px-10 bg-white dark:bg-[#000000] border-t border-gray-100 dark:border-[#1c1c1e]">
-                <form onSubmit={handleAddTask} className="relative max-w-3xl">
-                  <input type="text" placeholder={isMyDay ? "Přidat nový úkol na dnešek..." : "Přidat nový úkol..."} value={newTaskText} onChange={(e) => setNewTaskText(e.target.value)} className="w-full bg-[#f2f2f7] dark:bg-[#1c1c1e] text-[#1c1c1e] dark:text-[#f5f5f7] rounded-xl py-3 pl-4 pr-12 outline-none text-[17px] focus:bg-white dark:focus:bg-[#2c2c2e] focus:ring-2 focus:ring-[#007aff]/30 border border-transparent focus:border-[#007aff]/30 transition-all placeholder:text-gray-500"/>
-                  <button type="submit" className={`absolute right-2 top-[22px] -translate-y-1/2 text-white rounded-lg p-1.5 active:scale-95 transition-transform ${isMyDay ? 'bg-[#ff9500] hover:bg-[#e08300]' : 'bg-[#007aff] hover:bg-[#0062cc]'}`}><Plus size={20} /></button>
-                </form>
+                {/* Seznam úkolů (SCROLLOVÁNÍ OPRAVENO ZDE) */}
+                <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-32">
+                  <div className="max-w-4xl mx-auto">
+                    {displayedTasks.length === 0 ? (
+                      <div className="pt-24 text-center text-gray-400 dark:text-gray-600 flex flex-col items-center">
+                        <div className={`p-6 rounded-3xl mb-4 ${isMyDay ? 'bg-[#ff9500]/10' : 'bg-gray-100 dark:bg-gray-800/50'}`}>
+                          {isMyDay ? <Star size={48} className="text-[#ff9500]" /> : <LayoutList size={48} className="" />}
+                        </div>
+                        <p className="text-lg font-medium text-gray-500">Zatím tu nic není.</p>
+                      </div>
+                    ) : (
+                      <SortableContext items={displayedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                        {displayedTasks.map((task) => (
+                          <SortableTaskItem key={task.id} task={task} onToggle={handleToggleTask} onClick={setSelectedTask} onDelete={handleDeleteTask} isMyDay={isMyDay} />
+                        ))}
+                      </SortableContext>
+                    )}
+                  </div>
+                </div>
+
+                {/* Přidávací lišta dole */}
+                <div className="absolute bottom-0 left-0 w-full p-4 md:p-8 bg-gradient-to-t from-[#f2f2f7] via-[#f2f2f7]/90 md:from-white md:via-white/90 dark:from-[#000000] dark:via-[#000000]/90 md:dark:from-[#151515] md:dark:via-[#151515]/90 to-transparent pt-12">
+                  <form onSubmit={handleAddTask} className="relative max-w-4xl mx-auto shadow-xl shadow-black/5 dark:shadow-black/20 rounded-2xl">
+                    <input type="text" placeholder={isMyDay ? "Přidat úkol na Můj den..." : "Přidat nový úkol..."} value={newTaskText} onChange={(e) => setNewTaskText(e.target.value)} className="w-full bg-white dark:bg-[#1c1c1e] text-[#1c1c1e] dark:text-[#f5f5f7] rounded-2xl py-4 pl-5 pr-14 outline-none text-[17px] focus:ring-4 focus:ring-[#007aff]/10 border border-gray-100 dark:border-gray-800 focus:border-[#007aff]/30 transition-all placeholder:text-gray-400"/>
+                    <button type="submit" className={`absolute right-2.5 top-[50%] -translate-y-1/2 text-white rounded-xl p-2 active:scale-90 transition-transform ${isMyDay ? 'bg-[#ff9500] hover:bg-[#e08300] shadow-md shadow-orange-500/20' : 'bg-[#007aff] hover:bg-[#0062cc] shadow-md shadow-blue-500/20'}`}><Plus size={22} /></button>
+                  </form>
+                </div>
+              </>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-600">
+                <LayoutList size={64} className="mb-4 opacity-20" />
+                <p className="text-lg font-medium">Vyberte seznam vlevo</p>
               </div>
-            </>
-          ) : (
-            <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-600">Vyberte seznam vlevo</div>
-          )}
+            )}
+          </div>
         </div>
       </DndContext>
 
-      {/* --- MODAL DETAILU ÚKOLU --- */}
+      {/* --- MODAL DETAILU ÚKOLU (OPRAVA NAMAČKANÝCH BOXŮ) --- */}
       {selectedTask && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-0 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#1c1c1e] rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-[#2c2c2e] flex items-center justify-between bg-gray-50/50 dark:bg-[#1c1c1e]">
-              <h3 className="font-semibold text-lg text-gray-800 dark:text-[#f5f5f7] truncate pr-4">Detail úkolu</h3>
-              <button onClick={() => setSelectedTask(null)} className="p-2 bg-gray-200/50 dark:bg-[#2c2c2e] hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 transition-colors"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-0 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#1c1c1e] rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300">
+            <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <h3 className="font-semibold text-[17px] text-gray-800 dark:text-[#f5f5f7] truncate pr-4">Detail úkolu</h3>
+              <button onClick={() => setSelectedTask(null)} className="p-2 bg-gray-100 dark:bg-[#2c2c2e] hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 transition-colors active:scale-90"><X size={20} /></button>
             </div>
             
-            <div className="p-6 space-y-5">
+            <div className="p-6 md:p-8 space-y-6">
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Název</label>
-                <input type="text" value={selectedTask.text} onChange={(e) => setSelectedTask({...selectedTask, text: e.target.value})} className="w-full text-lg font-medium outline-none border-b border-transparent focus:border-[#007aff] pb-1 transition-colors bg-transparent dark:text-white"/>
+                <label className="text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5 block">Název úkolu</label>
+                <input type="text" value={selectedTask.text} onChange={(e) => setSelectedTask({...selectedTask, text: e.target.value})} className="w-full text-xl md:text-2xl font-semibold outline-none border-b-2 border-transparent focus:border-[#007aff] pb-1 transition-colors bg-transparent dark:text-white"/>
               </div>
               
-              <div className="flex gap-4">
+              {/* OPRAVA: flex-col na mobilech, flex-row na PC */}
+              <div className="flex flex-col sm:flex-row gap-5">
                 <div className="flex-1">
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1"><Calendar size={14}/> Termín</label>
-                  <input type="date" value={selectedTask.due_date || ''} onChange={(e) => setSelectedTask({...selectedTask, due_date: e.target.value})} className="w-full bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-xl p-3 outline-none text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[#007aff]/30 transition-all [color-scheme:light] dark:[color-scheme:dark]"/>
+                  <label className="text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5"><Calendar size={14}/> Termín</label>
+                  <input type="date" value={selectedTask.due_date || ''} onChange={(e) => setSelectedTask({...selectedTask, due_date: e.target.value})} className="w-full bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-xl p-3.5 outline-none text-[15px] font-medium text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[#007aff]/30 transition-all [color-scheme:light] dark:[color-scheme:dark]"/>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1"><Tag size={14}/> Štítek</label>
-                  <div className="flex items-center gap-2 bg-[#f2f2f7] dark:bg-[#2c2c2e] p-3 rounded-xl">
+                  <label className="text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5"><Tag size={14}/> Štítek</label>
+                  <div className="flex items-center justify-between sm:justify-start gap-2.5 bg-[#f2f2f7] dark:bg-[#2c2c2e] p-3.5 rounded-xl">
                     {TAG_COLORS.map(color => (
-                      <button key={color.id} onClick={() => setSelectedTask({...selectedTask, color: color.id})} className={`w-6 h-6 rounded-full border-2 transition-all ${color.bg} ${selectedTask.color === color.id ? 'scale-110 border-gray-400 dark:border-white shadow-sm' : color.border}`}/>
+                      <button key={color.id} onClick={() => setSelectedTask({...selectedTask, color: color.id})} className={`w-6 h-6 rounded-full border-2 transition-all shadow-sm ${color.bg} ${selectedTask.color === color.id ? 'scale-125 border-gray-400 dark:border-white' : color.border}`}/>
                     ))}
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1"><AlignLeft size={14}/> Poznámky</label>
-                <textarea placeholder="Přidejte popis nebo detaily..." value={selectedTask.notes || ''} onChange={(e) => setSelectedTask({...selectedTask, notes: e.target.value})} className="w-full bg-[#f2f2f7] dark:bg-[#2c2c2e] dark:text-white rounded-xl p-3 outline-none text-[15px] focus:ring-2 focus:ring-[#007aff]/30 transition-all min-h-[120px] resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600"/>
+                <label className="text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5"><AlignLeft size={14}/> Poznámky</label>
+                <textarea placeholder="Přidejte popis nebo detaily..." value={selectedTask.notes || ''} onChange={(e) => setSelectedTask({...selectedTask, notes: e.target.value})} className="w-full bg-[#f2f2f7] dark:bg-[#2c2c2e] dark:text-white rounded-xl p-4 outline-none text-[16px] focus:ring-2 focus:ring-[#007aff]/30 transition-all min-h-[140px] resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600"/>
               </div>
             </div>
             
-            {/* OPRAVA: Dvě tlačítka v detailu (Smazat a Uložit) */}
-            <div className="p-6 pt-2 flex gap-3">
-              <button onClick={() => handleDeleteTask(selectedTask.id)} className="flex-shrink-0 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3.5 rounded-2xl active:scale-95 transition-transform hover:bg-red-200 dark:hover:bg-red-900/50">
-                <Trash2 size={20} />
+            <div className="p-6 md:p-8 pt-0 flex gap-3">
+              <button onClick={() => handleDeleteTask(selectedTask.id)} className="flex-shrink-0 bg-red-50 dark:bg-red-900/20 text-red-500 p-4 rounded-2xl active:scale-95 transition-transform hover:bg-red-100 dark:hover:bg-red-900/40">
+                <Trash2 size={22} />
               </button>
-              <button onClick={handleSaveTaskDetails} className="flex-1 bg-[#007aff] text-white font-semibold text-[17px] py-3.5 rounded-2xl active:scale-95 transition-transform shadow-md shadow-blue-500/20">
+              <button onClick={handleSaveTaskDetails} className="flex-1 bg-[#007aff] text-white font-semibold text-[17px] py-4 rounded-2xl active:scale-95 transition-transform shadow-lg shadow-blue-500/20 hover:bg-[#0062cc]">
                 Uložit změny
               </button>
             </div>
