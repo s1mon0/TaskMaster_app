@@ -234,7 +234,7 @@ export default function App() {
   if (isLoading) return <div className="h-screen w-full flex flex-col items-center justify-center bg-[#f2f2f7] dark:bg-[#000000]"><Loader2 className="animate-spin h-14 w-14 text-[#007aff]/60" /></div>;
 
   return (
-    <div className="flex h-screen w-full bg-white dark:bg-[#000000] text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased relative transition-colors duration-300">
+    <div className="flex min-h-[100dvh] w-full bg-white dark:bg-[#000000] text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased relative transition-colors duration-300 overflow-x-hidden">
       
       {dbError && (
         <div className="absolute top-0 left-0 w-full z-[100] bg-red-500 text-white p-3 flex items-center justify-between shadow-lg">
