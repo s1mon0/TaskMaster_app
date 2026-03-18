@@ -20,12 +20,11 @@ function SortableListItem({ list, isActive, onClick, onDelete }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: list.id });
   
   const style = { 
-    transform: CSS.Translate.toString(transform), 
-    transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)', 
-    zIndex: isDragging ? 100 : 1, 
-    opacity: isDragging ? 0.8 : 1,
-    position: 'relative',
-    touchAction: 'none'
+  transform: CSS.Translate.toString(transform), 
+  transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)', 
+  zIndex: isDragging ? 100 : 1, 
+  opacity: isDragging ? 0.8 : 1,
+  position: 'relative'
   };
 
   return (
@@ -53,7 +52,6 @@ function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
     zIndex: isDragging ? 10 : 1, 
     opacity: isDragging ? 0.9 : 1,
     position: 'relative',
-    touchAction: 'none'
   };
 
   return (
