@@ -20,11 +20,12 @@ function SortableListItem({ list, isActive, onClick, onDelete }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: list.id });
   
   const style = { 
-  transform: CSS.Translate.toString(transform), 
-  transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)', 
-  zIndex: isDragging ? 100 : 1, 
-  opacity: isDragging ? 0.8 : 1,
-  position: 'relative'
+    transform: CSS.Translate.toString(transform), 
+    transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)', 
+    zIndex: isDragging ? 100 : 1, 
+    opacity: isDragging ? 0.8 : 1,
+    position: 'relative'
+    // OPRAVA SCROLLU: Smazáno touchAction: 'none'
   };
 
   return (
@@ -51,8 +52,14 @@ function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
     transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)', 
     zIndex: isDragging ? 10 : 1, 
     opacity: isDragging ? 0.9 : 1,
-    position: 'relative',
+    position: 'relative'
+    // OPRAVA SCROLLU: Smazáno touchAction: 'none'
   };
+
+  // Logika pro zpožděné úkoly
+  const todayString = new Date().toISOString().split('T')[0];
+  const isOverdue = task.due_date && task.due_date < todayString && !task.is_done;
+  const isToday = task.due_date === todayString && !task.is_done;
 
   return (
     <div ref={setNodeRef} style={style} onClick={() => onClick(task)} className={`group flex items-center justify-between p-3.5 sm:p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl transition-all cursor-pointer border ${isDragging ? 'shadow-2xl border-gray-300 dark:border-gray-600 z-50' : 'shadow-sm border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] hover:shadow-md'}`}>
@@ -63,18 +70,25 @@ function SortableTaskItem({ task, onToggle, onClick, onDelete, isMyDay }) {
           </div>
         )}
         <button onClick={(e) => { e.stopPropagation(); onToggle(task, e); }} className={`flex-shrink-0 focus:outline-none z-10 transition-transform active:scale-90 ${isMyDay ? 'ml-1' : ''}`}>
-          {task.is_done ? <CheckCircle2 size={26} className="text-[#007aff] fill-[#007aff]/10 dark:fill-[#007aff]/20" /> : <Circle size={26} className="text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500" />}
+          {task.is_done ? <CheckCircle2 size={26} className="text-[#007aff] fill-[#007aff]/10 dark:fill-[#007aff]/20" /> : <Circle size={26} className={`group-hover:text-gray-400 dark:group-hover:text-gray-500 ${isOverdue ? 'text-[#ff3b30]/50 dark:text-[#ff453a]/50' : 'text-gray-300 dark:text-gray-600'}`} />}
         </button>
         <div className="flex flex-col flex-1 justify-center min-w-0">
           <div className="flex items-start gap-2">
-            <span className={`text-[16px] sm:text-[17px] font-medium transition-all break-words whitespace-normal leading-snug ${task.is_done ? 'text-gray-400 dark:text-gray-600 line-through' : 'text-[#1c1c1e] dark:text-[#f5f5f7]'}`}>
+            {/* ZBARVENÍ TEXTU DO ČERVENA, POKUD JE PO TERMÍNU */}
+            <span className={`text-[16px] sm:text-[17px] font-medium transition-all break-words whitespace-normal leading-snug ${task.is_done ? 'text-gray-400 dark:text-gray-600 line-through' : isOverdue ? 'text-[#ff3b30] dark:text-[#ff453a]' : 'text-[#1c1c1e] dark:text-[#f5f5f7]'}`}>
               {task.text}
             </span>
             {task.color && <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5 shadow-sm" style={{ backgroundColor: task.color }}></div>}
           </div>
           {(task.due_date || task.notes) && (
              <div className="flex items-center gap-3 mt-1.5 text-[13px] text-gray-400 dark:text-gray-500">
-               {task.due_date && <span className={`flex items-center gap-1 ${task.due_date === new Date().toISOString().split('T')[0] && !task.is_done ? 'text-[#ff9500] font-medium' : ''}`}><Calendar size={12}/> {new Date(task.due_date).toLocaleDateString('cs-CZ')}</span>}
+               {task.due_date && (
+                 // ZBARVENÍ DATA DO ČERVENA + TEXT "Zpožděno"
+                 <span className={`flex items-center gap-1 ${isOverdue ? 'text-[#ff3b30] dark:text-[#ff453a] font-bold' : isToday ? 'text-[#ff9500] font-medium' : ''}`}>
+                   <Calendar size={12}/> 
+                   {isOverdue ? 'Zpožděno: ' : ''}{new Date(task.due_date).toLocaleDateString('cs-CZ')}
+                 </span>
+               )}
                {task.notes && <span className="flex items-center gap-1"><AlignLeft size={12}/> Poznámka</span>}
              </div>
           )}
@@ -151,13 +165,28 @@ export default function App() {
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
+    document.activeElement?.blur(); 
+    
     let targetListId = activeListId;
     let targetDate = null;
+    
+    // OPRAVA: Univerzální seznam "Úkoly" pro Můj den
     if (activeListId === 'my-day') {
-      if (lists.length === 0) return;
-      targetListId = lists[0].id;
+      let defaultList = lists.find(l => l.name === 'Úkoly');
+      
+      if (!defaultList) {
+        const { data } = await supabase.from('lists').insert([{ name: 'Úkoly', position: 0 }]).select();
+        if (data) {
+          defaultList = data[0];
+          setLists([defaultList, ...lists]);
+        } else {
+          return; 
+        }
+      }
+      targetListId = defaultList.id;
       targetDate = new Date().toISOString().split('T')[0];
     }
+    
     const { data } = await supabase.from('tasks').insert([{ list_id: targetListId, text: newTaskText.trim(), due_date: targetDate }]).select();
     if (data) { setTasks([...tasks, data[0]]); setNewTaskText(''); }
   };
@@ -212,7 +241,12 @@ export default function App() {
 
   const isMyDay = activeListId === 'my-day';
   const todayString = new Date().toISOString().split('T')[0];
-  const displayedTasks = isMyDay ? tasks.filter(t => t.due_date === todayString) : tasks.filter(t => t.list_id === activeListId).sort((a, b) => a.position - b.position);
+  
+  // OPRAVA ZOBRAZENÍ: V Můj den se ukážou i starší nesplněné úkoly (Rollover)
+  const displayedTasks = isMyDay 
+    ? tasks.filter(t => t.due_date === todayString || (t.due_date && t.due_date < todayString && !t.is_done)) 
+    : tasks.filter(t => t.list_id === activeListId).sort((a, b) => a.position - b.position);
+    
   const displayedListName = isMyDay ? 'Můj den' : lists.find(l => l.id === activeListId)?.name;
   const progressPercent = displayedTasks.length === 0 ? 0 : Math.round((displayedTasks.filter(t => t.is_done).length / displayedTasks.length) * 100);
 
@@ -236,7 +270,12 @@ export default function App() {
               <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-2.5">Chytré přehledy</p>
               <div onClick={() => setActiveListId('my-day')} className={`flex items-center justify-between p-3.5 rounded-2xl cursor-pointer ${isMyDay ? 'bg-white dark:bg-[#1c1c1e] shadow-sm text-[#007aff]' : 'hover:bg-gray-200/50 dark:hover:bg-[#1c1c1e]'}`}>
                 <div className="flex items-center gap-3.5"><Star size={20} className={isMyDay ? 'text-[#007aff]' : 'text-[#ff9500]'} /><span className="text-[16px] font-medium">Můj den</span></div>
-                {tasks.filter(t => t.due_date === todayString && !t.is_done).length > 0 && <span className="text-[13px] font-bold px-2.5 py-1 rounded-full bg-gray-200 dark:bg-gray-800">{tasks.filter(t => t.due_date === todayString && !t.is_done).length}</span>}
+                {/* OPRAVA ČÍSLA: Počítá i nesplněné z minula */}
+                {tasks.filter(t => (t.due_date === todayString || (t.due_date && t.due_date < todayString)) && !t.is_done).length > 0 && 
+                  <span className="text-[13px] font-bold px-2.5 py-1 rounded-full bg-[#007aff]/10 text-[#007aff] dark:bg-[#007aff]/20">
+                    {tasks.filter(t => (t.due_date === todayString || (t.due_date && t.due_date < todayString)) && !t.is_done).length}
+                  </span>
+                }
               </div>
             </div>
             <div>
@@ -254,7 +293,6 @@ export default function App() {
           <div className="flex-1 bg-[#f2f2f7] dark:bg-[#000000] md:bg-white md:dark:bg-[#151515] md:rounded-[24px] md:shadow-sm md:border md:border-gray-200/50 dark:md:border-gray-800 flex flex-col overflow-hidden relative">
             {activeListId ? (
               <>
-                {/* Sticky Hlavička s velmi jemným spodním okrajem */}
                 <div className="px-6 pt-12 pb-6 md:px-12 md:pt-14 z-10 sticky top-0 bg-[#f2f2f7]/80 dark:bg-[#000000]/80 md:bg-white/80 md:dark:bg-[#151515]/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 md:border-none">
                   <div className="flex items-center gap-2 mb-6">
                     <button onClick={() => setActiveListId(null)} className="md:hidden flex items-center text-[#007aff] pr-3 -ml-3"><ChevronLeft size={32} /></button>
@@ -263,14 +301,14 @@ export default function App() {
                   <div className="flex items-center gap-4"><div className="flex-1 h-2.5 bg-gray-200/60 dark:bg-gray-800 rounded-full overflow-hidden"><div className={`h-full transition-all duration-700 ease-out ${isMyDay ? 'bg-[#ff9500]' : 'bg-[#007aff]'}`} style={{ width: `${progressPercent}%` }}></div></div><span className="text-[15px] font-semibold w-12 text-right">{progressPercent}%</span></div>
                 </div>
 
-                {/* Seznam úkolů */}
-                <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-32">
+                {/* Seznam úkolů s velkým prostorem dole, aby nepřekážela lišta */}
+                <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-44">
                   <div className="max-w-4xl mx-auto pt-6">
                     <SortableContext items={displayedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>{displayedTasks.map((task) => <SortableTaskItem key={task.id} task={task} onToggle={handleToggleTask} onClick={setSelectedTask} onDelete={handleDeleteTask} isMyDay={isMyDay} />)}</SortableContext>
                   </div>
                 </div>
 
-                {/* --- OPRAVA: Plovoucí bar bez celoplošné mlhy --- */}
+                {/* Plovoucí bar */}
                 <div className="absolute bottom-0 left-0 w-full p-6 pb-10 md:p-10 pointer-events-none z-20">
                   <form onSubmit={handleAddTask} className="relative max-w-4xl mx-auto shadow-2xl shadow-black/20 rounded-2xl pointer-events-auto">
                     <input 
