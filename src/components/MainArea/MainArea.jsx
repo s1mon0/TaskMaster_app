@@ -3,7 +3,7 @@ import { ChevronLeft, Plus } from 'lucide-react';
 import TaskItem from './TaskItem';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-export default function MainArea({ activeListId, listName, tasks, onBack, onAddTask, onToggleTask, onDeleteTask, onEditTask, onTaskClick, progress }) {
+export default function MainArea({ activeListId, listName, tasks, onBack, onAddTask, onToggleTask, onDeleteTask, onEditTask, onTaskClick, progress, newTaskText, setNewTaskText }) {
   return (
     <div className={`flex-1 flex flex-col h-full relative ${!activeListId ? 'hidden md:flex' : 'flex'} md:p-3`}>
       <div className="flex-1 bg-white dark:bg-[#151515] md:rounded-[24px] shadow-sm flex flex-col overflow-hidden border dark:border-gray-800">
@@ -30,7 +30,7 @@ export default function MainArea({ activeListId, listName, tasks, onBack, onAddT
 
         <div className="absolute bottom-6 left-0 w-full px-6">
           <form onSubmit={onAddTask} className="max-w-4xl mx-auto relative">
-            <input type="text" placeholder="Přidat úkol..." className="w-full bg-gray-100 dark:bg-[#1c1c1e] rounded-2xl py-4 pl-5 pr-14 outline-none"/>
+            <input type="text" value={newTaskText} onChange={(e) => setNewTaskText(e.target.value)} placeholder="Přidat úkol..." className="w-full bg-gray-100 dark:bg-[#1c1c1e] rounded-2xl py-4 pl-5 pr-14 outline-none"/>
             <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#007aff] text-white p-2 rounded-xl"><Plus /></button>
           </form>
         </div>

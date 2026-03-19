@@ -3,9 +3,9 @@ import { LayoutList, Sun, Moon, Star, Calendar, Infinity as AllIcon } from 'luci
 import SidebarItem from './SidebarItem';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-export default function Sidebar({ lists, activeListId, onListClick, onCreateList, onDeleteList, onEditList, isDarkMode, toggleDarkMode, tasks }) {
+export default function Sidebar({ lists, activeListId, onListClick, onCreateList, onDeleteList, onEditList, isDarkMode, toggleDarkMode, tasks, newListName, setNewListName }) {
   const todayString = new Date().toISOString().split('T')[0];
-  
+
   // Výpočty pro dlaždice
   const todayCount = tasks.filter(t => !t.is_done && (t.due_date === todayString || (t.due_date && t.due_date < todayString))).length;
   const scheduledCount = tasks.filter(t => !t.is_done && t.due_date).length;
@@ -59,7 +59,7 @@ export default function Sidebar({ lists, activeListId, onListClick, onCreateList
             </div>
           </SortableContext>
           <form onSubmit={onCreateList} className="mt-4 px-1">
-            <input type="text" placeholder="Nový seznam..." className="w-full bg-transparent py-3 px-4 outline-none focus:bg-white dark:focus:bg-[#1c1c1e] rounded-xl transition-all"/>
+            <input type="text" value={newListName} onChange={(e) => setNewListName(e.target.value)} placeholder="Nový seznam..." className="w-full bg-transparent py-3 px-4 outline-none focus:bg-white dark:focus:bg-[#1c1c1e] rounded-xl transition-all"/>
           </form>
         </div>
       </div>
