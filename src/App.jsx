@@ -18,7 +18,10 @@ import TaskDetailModal from './components/Modals/TaskDetailModal';
 export default function App() {
   const [lists, setLists] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [activeListId, setActiveListId] = useState('my-day');
+  // Na mobilu zobrazit sidebar (dlaždice) při startu, na desktopu rovnou "Můj den"
+  const [activeListId, setActiveListId] = useState(
+    () => window.innerWidth >= 768 ? 'my-day' : null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
 
