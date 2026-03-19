@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, Plus, Trash2, Circle, CheckCircle2, LayoutList, Loader2, Calendar, AlignLeft, X, GripVertical, Sun, Moon, Star, Tag, AlertTriangle, Pencil, Check } from 'lucide-react';
+import { ChevronLeft, Plus, LayoutList, Loader2, Sun, Moon, Star, X, Trash2 } from 'lucide-react';
 import { supabase } from './supabase'; 
 
 import { DndContext, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+
+// IMPORTY NAŠICH NOVÝCH KOMPONENT
+import TaskItem from './components/TaskItem';
+import SidebarItem from './components/SidebarItem';
 
 const TAG_COLORS = [
   { id: '', bg: 'bg-gray-200 dark:bg-gray-800', border: 'border-transparent' },
@@ -15,165 +18,6 @@ const TAG_COLORS = [
   { id: '#af52de', bg: 'bg-[#af52de]', border: 'border-[#af52de]' },
 ];
 
-// --- KOMPONENTA PRO SEZNAM (SIDEBAR) ---
-function SortableListItem({ list, isActive, onClick, onDelete, onEdit }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: list.id });
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(list.name);
-  
-  const style = { 
-    transform: CSS.Translate.toString(transform), 
-    transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)', 
-    zIndex: isDragging ? 100 : 1, 
-    opacity: isDragging ? 0.8 : 1,
-    position: 'relative'
-  };
-
-  const handleSave = (e) => {
-    e.stopPropagation();
-    if (editValue.trim() && editValue !== list.name) {
-      onEdit(list.id, editValue);
-    } else {
-      setEditValue(list.name);
-    }
-    setIsEditing(false);
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} onClick={() => !isEditing && onClick(list.id)} className={`group flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${isDragging ? 'bg-white dark:bg-[#2c2c2e] shadow-xl border border-gray-200 dark:border-gray-700' : isActive ? 'bg-[#007aff] text-white shadow-sm' : 'hover:bg-gray-200/60 dark:hover:bg-[#2c2c2e] active:bg-gray-300 dark:active:bg-[#3a3a3c]'}`}>
-      <div className="flex items-center flex-1 overflow-hidden">
-        <div {...attributes} {...listeners} className={`cursor-grab active:cursor-grabbing touch-none mr-1.5 p-1 -ml-1 transition-opacity opacity-0 group-hover:opacity-100 ${isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
-          <GripVertical size={16} />
-        </div>
-        
-        {isEditing ? (
-          <input
-            autoFocus
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSave(e); if (e.key === 'Escape') { setIsEditing(false); setEditValue(list.name); } }}
-            onClick={(e) => e.stopPropagation()}
-            className={`flex-1 bg-transparent border-b outline-none text-[15px] font-medium py-0.5 ${isActive ? 'border-white/50 text-white' : 'border-[#007aff] text-[#1c1c1e] dark:text-[#f5f5f7]'}`}
-          />
-        ) : (
-          <span className="text-[15px] font-medium truncate pr-2 flex-1">{list.name}</span>
-        )}
-      </div>
-
-      <div className="flex items-center flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-        {isEditing ? (
-          <>
-            <button onClick={handleSave} className={`p-1.5 rounded-lg ${isActive ? 'text-white hover:bg-white/20' : 'text-[#34c759] hover:bg-gray-200 dark:hover:bg-gray-700'}`}><Check size={16} /></button>
-            <button onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditValue(list.name); }} className={`p-1.5 rounded-lg ${isActive ? 'text-white/80 hover:bg-white/20' : 'text-gray-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}><X size={16} /></button>
-          </>
-        ) : (
-          <>
-            <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} className={`p-1.5 rounded-lg mr-0.5 ${isActive ? 'text-white/80 hover:bg-white/20' : 'text-gray-400 hover:text-[#007aff] hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
-              <Pencil size={15} />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(list.id, e); }} className={`p-1.5 rounded-lg ${isActive ? 'text-white/80 hover:bg-white/20' : 'text-gray-400 hover:text-[#ff3b30] hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
-              <Trash2 size={16} />
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// --- KOMPONENTA PRO ÚKOL ---
-function SortableTaskItem({ task, onToggle, onClick, onDelete, onEdit, isMyDay }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(task.text);
-  
-  const style = { 
-    transform: CSS.Translate.toString(transform), 
-    transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)', 
-    zIndex: isDragging ? 10 : 1, 
-    opacity: isDragging ? 0.9 : 1,
-    position: 'relative'
-  };
-
-  const todayString = new Date().toISOString().split('T')[0];
-  const isOverdue = task.due_date && task.due_date < todayString && !task.is_done;
-  const isToday = task.due_date === todayString && !task.is_done;
-
-  const handleSave = (e) => {
-    e.stopPropagation();
-    if (editValue.trim() && editValue !== task.text) {
-      onEdit(task.id, editValue);
-    } else {
-      setEditValue(task.text);
-    }
-    setIsEditing(false);
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} onClick={() => !isEditing && onClick(task)} className={`group flex items-center justify-between p-3.5 sm:p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl transition-all cursor-pointer border ${isDragging ? 'shadow-2xl border-gray-300 dark:border-gray-600 z-50' : 'shadow-sm border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] hover:shadow-md'}`}>
-      <div className="flex items-center gap-3.5 flex-1 min-w-0">
-        {!isMyDay && (
-          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-300 dark:text-gray-600 hover:text-gray-500 p-1 -ml-2 touch-none">
-            <GripVertical size={18} />
-          </div>
-        )}
-        <button onClick={(e) => { e.stopPropagation(); onToggle(task, e); }} className={`flex-shrink-0 focus:outline-none z-10 transition-transform active:scale-90 ${isMyDay ? 'ml-1' : ''}`}>
-          {task.is_done ? <CheckCircle2 size={26} className="text-[#007aff] fill-[#007aff]/10 dark:fill-[#007aff]/20" /> : <Circle size={26} className={`group-hover:text-gray-400 dark:group-hover:text-gray-500 ${isOverdue ? 'text-[#ff3b30]/50 dark:text-[#ff453a]/50' : 'text-gray-300 dark:text-gray-600'}`} />}
-        </button>
-        <div className="flex flex-col flex-1 justify-center min-w-0">
-          <div className="flex items-start gap-2">
-            {isEditing ? (
-              <input
-                autoFocus
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSave(e); if (e.key === 'Escape') { setIsEditing(false); setEditValue(task.text); } }}
-                onClick={(e) => e.stopPropagation()}
-                className="flex-1 bg-transparent border-b border-[#007aff] outline-none text-[16px] sm:text-[17px] text-[#1c1c1e] dark:text-[#f5f5f7] py-0.5"
-              />
-            ) : (
-              <span className={`text-[16px] sm:text-[17px] font-medium transition-all break-words whitespace-normal leading-snug ${task.is_done ? 'text-gray-400 dark:text-gray-600 line-through' : isOverdue ? 'text-[#ff3b30] dark:text-[#ff453a]' : 'text-[#1c1c1e] dark:text-[#f5f5f7]'}`}>
-                {task.text}
-              </span>
-            )}
-            {task.color && !isEditing && <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5 shadow-sm" style={{ backgroundColor: task.color }}></div>}
-          </div>
-          {(task.due_date || task.notes) && !isEditing && (
-             <div className="flex items-center gap-3 mt-1.5 text-[13px] text-gray-400 dark:text-gray-500">
-               {task.due_date && (
-                 <span className={`flex items-center gap-1 ${isOverdue ? 'text-[#ff3b30] dark:text-[#ff453a] font-bold' : isToday ? 'text-[#ff9500] font-medium' : ''}`}>
-                   <Calendar size={12}/> 
-                   {isOverdue ? 'Zpožděno: ' : ''}{new Date(task.due_date).toLocaleDateString('cs-CZ')}
-                 </span>
-               )}
-               {task.notes && <span className="flex items-center gap-1"><AlignLeft size={12}/> Poznámka</span>}
-             </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-1 flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity ml-2">
-        {isEditing ? (
-          <>
-            <button onClick={handleSave} className="p-2 rounded-xl text-[#34c759] hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200"><Check size={18} /></button>
-            <button onClick={(e) => { e.stopPropagation(); setIsEditing(false); setEditValue(task.text); }} className="p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200"><X size={18} /></button>
-          </>
-        ) : (
-          <>
-            <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} className="p-2 rounded-xl text-gray-400 hover:text-[#007aff] hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200">
-              <Pencil size={18} />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(task.id, e); }} className="p-2 rounded-xl text-gray-400 hover:text-[#ff3b30] hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200">
-              <Trash2 size={18} />
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// --- HLAVNÍ KOMPONENTA APLIKACE ---
 export default function App() {
   const [lists, setLists] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -361,7 +205,20 @@ export default function App() {
             </div>
             <div>
               <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-2.5">Moje seznamy</p>
-              <SortableContext items={lists.map(l => l.id)} strategy={verticalListSortingStrategy}><div className="space-y-0.5 px-1">{lists.map((list) => <SortableListItem key={list.id} list={list} isActive={activeListId === list.id} onClick={setActiveListId} onDelete={handleDeleteList} onEdit={handleEditList} />)}</div></SortableContext>
+              <SortableContext items={lists.map(l => l.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-0.5 px-1">
+                  {lists.map((list) => (
+                    <SidebarItem 
+                      key={list.id} 
+                      list={list} 
+                      isActive={activeListId === list.id} 
+                      onClick={setActiveListId} 
+                      onDelete={handleDeleteList} 
+                      onEdit={handleEditList} 
+                    />
+                  ))}
+                </div>
+              </SortableContext>
               <form onSubmit={handleCreateList} className="mt-4 px-1 relative"><input type="text" placeholder="Nový seznam..." value={newListName} onChange={(e) => setNewListName(e.target.value)} className="w-full bg-transparent py-3.5 pl-4 pr-16 outline-none text-[16px] focus:bg-white dark:focus:bg-[#1c1c1e] rounded-2xl transition-all"/>{newListName.trim() && <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 text-[#007aff] font-semibold">Přidat</button>}</form>
             </div>
           </div>
@@ -384,7 +241,19 @@ export default function App() {
 
                 <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-44">
                   <div className="max-w-4xl mx-auto pt-6">
-                    <SortableContext items={displayedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>{displayedTasks.map((task) => <SortableTaskItem key={task.id} task={task} onToggle={handleToggleTask} onClick={setSelectedTask} onDelete={handleDeleteTask} onEdit={handleEditTask} isMyDay={isMyDay} />)}</SortableContext>
+                    <SortableContext items={displayedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                      {displayedTasks.map((task) => (
+                        <TaskItem 
+                          key={task.id} 
+                          task={task} 
+                          onToggle={handleToggleTask} 
+                          onClick={setSelectedTask} 
+                          onDelete={handleDeleteTask} 
+                          onEdit={handleEditTask} 
+                          isMyDay={isMyDay} 
+                        />
+                      ))}
+                    </SortableContext>
                   </div>
                 </div>
 
