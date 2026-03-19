@@ -2,24 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Reset & base ──────────────────────────────────────────────── */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%; /* Změna z min-height na height */
-  overflow: hidden; /* Tohle je klíč – stránka jako taková se nehne */
-  
-  overscroll-behavior: none; 
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
   background-color: #f2f2f7;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Pozadí pro tmavý režim, aby pod aplikací nebyla bílá tma */
 .dark body {
   background-color: #000000;
 }
 
+/* ─── iOS Safari opravy ─────────────────────────────────────────── */
+
+/* ✅ FIX: Odstraní modrý/šedý blik při klepnutí na iOS */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ✅ FIX: Globálně font-size 16px pro všechny inputy a textarea
+   iOS Safari auto-zoomuje při focus, pokud je font-size < 16px */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+/* ✅ FIX: Zabraňuje "bounce" efektu při scrollování na iOS ve web-app režimu */
+body {
+  -webkit-overflow-scrolling: auto;
+}
+
+/* ✅ FIX: Podpora pro safe area (notch, Dynamic Island, home bar) */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   display: none;
+}
+
+/* ─── Drag & drop ───────────────────────────────────────────────── */
+
+/* ✅ FIX: Při aktivním drag nemá docházet ke scrollu
+   touch-none se aplikuje přes Tailwind třídu přímo na grip handle */
+
+/* ─── Animace modalu ────────────────────────────────────────────── */
+@keyframes slide-in-from-bottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-in.slide-in-from-bottom-10 {
+  animation: slide-in-from-bottom 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+/* ─── Tmavý mode – barva pro date input ─────────────────────────── */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0);
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }
