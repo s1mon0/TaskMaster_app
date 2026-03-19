@@ -26,7 +26,7 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
           {task.is_done ? <CheckCircle2 className="text-[#007aff]" size={24} /> : <Circle className="text-gray-300" size={24} />}
         </button>
         {isEditing ? (
-          <input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={handleSave} className="bg-transparent outline-none flex-1" onClick={(e) => e.stopPropagation()}/>
+          <input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={handleSave} className="bg-transparent outline-none flex-1 border-b border-[#007aff] text-[#1c1c1e] dark:text-white" onClick={(e) => e.stopPropagation()}/>
         ) : (
           <span className={`flex-1 ${task.is_done ? 'line-through text-gray-400' : ''}`}>{task.text}</span>
         )}

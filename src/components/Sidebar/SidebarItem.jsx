@@ -23,7 +23,7 @@ export default function SidebarItem({ list, isActive, onClick, onDelete, onEdit 
       <div className="flex items-center flex-1 overflow-hidden">
         <div {...attributes} {...listeners} className="mr-2 opacity-0 group-hover:opacity-100"><GripVertical size={16} /></div>
         {isEditing ? (
-          <input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={(e) => e.key === 'Enter' && handleSave(e)} className="bg-transparent border-b outline-none w-full" onClick={(e) => e.stopPropagation()}/>
+          <input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={(e) => e.key === 'Enter' && handleSave(e)} className="bg-transparent border-b border-[#007aff] outline-none w-full text-[#1c1c1e] dark:text-white" onClick={(e) => e.stopPropagation()}/>
         ) : (
           <span className="truncate">{list.name}</span>
         )}
