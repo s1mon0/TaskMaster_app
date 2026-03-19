@@ -40,7 +40,7 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
       ref={setNodeRef}
       style={style}
       onClick={() => !isEditing && onClick(task)}
-      className="group flex items-center justify-between p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl border border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] shadow-sm active:scale-[0.99] transition-transform"
+      className="group flex items-center justify-between p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl border border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] shadow-sm active:scale-[0.99] transition-transform min-w-0 overflow-hidden"
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Grip handle – touch-none zabraňuje scrollu při drag */}

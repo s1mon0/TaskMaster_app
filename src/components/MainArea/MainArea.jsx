@@ -10,7 +10,7 @@ export default function MainArea({
 }) {
   return (
     <div
-      className={`flex-1 flex flex-col h-full relative ${
+      className={`flex-1 min-w-0 flex flex-col h-full relative ${
         !activeListId ? 'hidden md:flex' : 'flex'
       } md:p-3`}
     >
