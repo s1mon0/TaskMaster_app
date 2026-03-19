@@ -15,7 +15,6 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
   
-  // Stavy pro formuláře
   const [newListName, setNewListName] = useState('');
   const [newTaskText, setNewTaskText] = useState('');
 
@@ -36,7 +35,6 @@ export default function App() {
     setLists(l || []); setTasks(t || []); setIsLoading(false);
   }
 
-  // --- LOGIKA PRO SEZNAMY ---
   const handleCreateList = async (e) => {
     e.preventDefault();
     if (!newListName.trim()) return;
@@ -55,7 +53,6 @@ export default function App() {
     if (activeListId === id) setActiveListId('my-day');
   };
 
-  // --- LOGIKA PRO ÚKOLY ---
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
@@ -94,7 +91,6 @@ export default function App() {
     if (selectedTask?.id === id) setSelectedTask(null);
   };
 
-  // --- DRAG & DROP ---
   const onDragEndList = async ({ active, over }) => {
     if (!over || active.id === over.id) return;
     const newLists = arrayMove(lists, lists.findIndex(l => l.id === active.id), lists.findIndex(l => l.id === over.id));
@@ -102,7 +98,6 @@ export default function App() {
     newLists.forEach((l, i) => supabase.from('lists').update({ position: i }).eq('id', l.id).then());
   };
 
-  // --- FILTRY ---
   const todayString = new Date().toISOString().split('T')[0];
   const getFilteredTasks = () => {
     if (activeListId === 'my-day') return tasks.filter(t => t.due_date === todayString || (t.due_date && t.due_date < todayString && !t.is_done));
@@ -118,14 +113,14 @@ export default function App() {
   if (isLoading) return <div className="h-screen flex items-center justify-center dark:bg-black"><Loader2 className="animate-spin text-[#007aff]" size={48} /></div>;
 
   return (
-    <div className="flex h-[100dvh] bg-[#f2f2f7] dark:bg-black overflow-hidden">
+    // TADY BYLA CHYBA: Vráceno text-[#1c1c1e] dark:text-[#f5f5f7]
+    <div className="flex h-[100dvh] bg-[#f2f2f7] dark:bg-black text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden transition-colors duration-300">
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEndList}>
         <Sidebar 
           lists={lists} tasks={tasks} activeListId={activeListId} 
           onListClick={setActiveListId} onEditList={handleEditList} 
           onDeleteList={handleDeleteList}
           isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
-          // Přidáno pro formulář:
           newListName={newListName} setNewListName={setNewListName} onCreateList={handleCreateList}
         />
       </DndContext>
@@ -134,13 +129,12 @@ export default function App() {
         activeListId={activeListId} listName={activeListName} tasks={activeTasks}
         onBack={() => setActiveListId(null)} onToggleTask={handleToggleTask}
         onEditTask={handleEditTask} onDeleteTask={handleDeleteTask} onTaskClick={setSelectedTask} progress={progress}
-        // Přidáno pro formulář:
         newTaskText={newTaskText} setNewTaskText={setNewTaskText} onAddTask={handleAddTask}
       />
 
       <TaskDetailModal 
         task={selectedTask} onClose={() => setSelectedTask(null)}
-        onChange={setSelectedTask} onSave={() => { /* logika uložení detailu */ setSelectedTask(null); }}
+        onChange={setSelectedTask} onSave={() => { setSelectedTask(null); }}
         onDelete={handleDeleteTask}
       />
     </div>
