@@ -6,14 +6,15 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 export default function Sidebar({ lists, activeListId, onListClick, onCreateList, onDeleteList, onEditList, isDarkMode, toggleDarkMode, tasks, newListName, setNewListName }) {
   const todayString = new Date().toISOString().split('T')[0];
   
-  // Výpočty pro dlaždice (in-progress counts)
   const todayCount = tasks.filter(t => !t.is_done && (t.due_date === todayString || (t.due_date && t.due_date < todayString))).length;
   const scheduledCount = tasks.filter(t => !t.is_done && t.due_date).length;
   const allCount = tasks.filter(t => !t.is_done).length;
 
-  const getTileClass = (id) => {
+  // OPRAVA: Přidán parametr isRow pro oddělení logiky rozložení
+  const getTileClass = (id, isRow = false) => {
     const isActive = activeListId === id;
-    const baseClass = "p-4 rounded-3xl cursor-pointer transition-all duration-300 ease-out border flex flex-col justify-between";
+    const layoutClass = isRow ? "flex-row items-center p-3.5 h-16" : "flex-col p-4";
+    const baseClass = `rounded-3xl cursor-pointer transition-all duration-300 ease-out border flex justify-between ${layoutClass}`;
     const hoverAnimation = "hover:scale-[1.02] hover:shadow-xl hover:border-transparent";
     
     if (isActive) {
@@ -37,33 +38,28 @@ export default function Sidebar({ lists, activeListId, onListClick, onCreateList
           <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-3.5 tracking-wider">Chytré přehledy</p>
           <div className="grid grid-cols-2 gap-4">
             
-            {/* Můj den - OPRAVENO LOGO A ČÍSLO */}
             <div onClick={() => onListClick('my-day')} className={getTileClass('my-day')}>
               <div className="flex justify-between items-start mb-3">
                 <div className="bg-[#ff9500] p-2.5 rounded-full text-white shadow-sm"><Star size={20} className="fill-white" /></div>
-                {/* OPRAVA: Pouze todayCount, s velkým písmem a kontrastní barvou */}
                 <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{todayCount}</span>
               </div>
               <span className={`font-semibold text-[15px] ${activeListId === 'my-day' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'}`}>Můj den</span>
             </div>
 
-            {/* Naplánované - OPRAVENO LOGO A ČÍSLO */}
             <div onClick={() => onListClick('scheduled')} className={getTileClass('scheduled')}>
               <div className="flex justify-between items-start mb-3">
                 <div className="bg-[#007aff] p-2.5 rounded-full text-white shadow-sm"><Calendar size={20} /></div>
-                {/* OPRAVA: Pouze scheduledCount, s velkým písmem a kontrastní barvou */}
                 <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{scheduledCount}</span>
               </div>
               <span className={`font-semibold text-[15px] ${activeListId === 'scheduled' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'}`}>Plánované</span>
             </div>
 
-            {/* Všechny tasks (Široká dlaždice) - LOGIKA UŽ JE SPRÁVNÁ */}
-            <div onClick={() => onListClick('all')} className={`${getTileClass('all')} col-span-2 p-3.5 flex-row justify-between items-center h-16`}>
+            {/* OPRAVA: getTileClass('all', true) jasně říká, že tohle je řádek a zakazuje sloupce */}
+            <div onClick={() => onListClick('all')} className={`${getTileClass('all', true)} col-span-2`}>
                 <div className="flex items-center gap-3.5">
                   <div className="bg-gray-500 p-2.5 rounded-full text-white shadow-sm"><AllIcon size={20} /></div>
                   <span className={`font-semibold text-[15px] ${activeListId === 'all' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'}`}>Všechny</span>
                 </div>
-                {/* Zde svítí large AllCount */}
                 <span className={`text-2xl font-bold tracking-tight mr-1 ${activeListId === 'all' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>
                   {allCount}
                 </span>
@@ -72,7 +68,7 @@ export default function Sidebar({ lists, activeListId, onListClick, onCreateList
         </div>
 
         <div>
-          <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-3 trucking-wider">Moje seznamy</p>
+          <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-3 tracking-wider">Moje seznamy</p>
           <SortableContext items={lists.map(l => l.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-0.5 px-1">
               {lists.map(list => (
