@@ -14,8 +14,8 @@ export default function TaskDetailModal({ task, onClose, onSave, onDelete, onCha
   if (!task) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-0">
-      <div className="bg-white dark:bg-[#1c1c1e] rounded-[24px] w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-0" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1c1c1e] rounded-[24px] w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <h3 className="font-semibold text-gray-800 dark:text-[#f5f5f7]">Detail úkolu</h3>
           <button onClick={onClose} className="p-2 bg-gray-100 dark:bg-[#2c2c2e] rounded-full active:scale-90"><X size={20} /></button>
