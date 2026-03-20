@@ -156,36 +156,42 @@ export default function App() {
 
   const todayString = new Date().toISOString().split('T')[0];
 
+  // Vždy řadit podle position – jinak drag & drop nemá vizuální efekt po re-renderu
+  const sortByPos = (arr) => [...arr].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+
   const getFilteredTasks = () => {
     if (activeListId === 'my-day')
-      return tasks.filter(t =>
+      return sortByPos(tasks.filter(t =>
         t.due_date === todayString ||
         (t.due_date && t.due_date < todayString && !t.is_done)
-      );
-    if (activeListId === 'scheduled') return tasks.filter(t => t.due_date);
-    if (activeListId === 'all') return tasks;
-    return tasks.filter(t => t.list_id === activeListId);
+      ));
+    if (activeListId === 'scheduled') return sortByPos(tasks.filter(t => t.due_date));
+    if (activeListId === 'all') return sortByPos(tasks);
+    return sortByPos(tasks.filter(t => t.list_id === activeListId));
   };
 
-  // ✅ FIX 2: Handler pro task drag & drop (dříve chyběl!)
   const onDragEndTask = async ({ active, over }) => {
     if (!over || active.id === over.id) return;
+
+    // getFilteredTasks() je již seřazeno – arrayMove dá správné nové pořadí
     const currentTasks = getFilteredTasks();
     const oldIndex = currentTasks.findIndex(t => t.id === active.id);
-    const newIndex = currentTasks.findIndex(t => t.id === over.id);
+    const newIndex  = currentTasks.findIndex(t => t.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
     const reordered = arrayMove(currentTasks, oldIndex, newIndex);
-    const positionMap = new Map(reordered.map((t, i) => [t.id, i]));
 
+    // Nové position hodnoty (násobky 10 = místo pro budoucí vkládání)
+    const idToPos = new Map(reordered.map((t, i) => [t.id, i * 10]));
+
+    // Aktualizovat lokální state – zachovat ostatní tasky beze změny
     setTasks(prev =>
-      prev.map(t =>
-        positionMap.has(t.id) ? { ...t, position: positionMap.get(t.id) } : t
-      )
+      prev.map(t => idToPos.has(t.id) ? { ...t, position: idToPos.get(t.id) } : t)
     );
 
+    // Uložit do Supabase
     reordered.forEach((t, i) =>
-      supabase.from('tasks').update({ position: i }).eq('id', t.id)
+      supabase.from('tasks').update({ position: i * 10 }).eq('id', t.id)
     );
   };
 
