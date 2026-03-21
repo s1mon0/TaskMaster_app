@@ -32,10 +32,10 @@ export default function App() {
     () => localStorage.getItem('theme') === 'dark'
   );
 
-  // ✅ FIX 1: TouchSensor s delay 200ms – ideální pro iOS bez konflitu se scrollem
+  // Delay 80ms = rychlý start jako Apple, tolerance 10 = odlišení od scrollu
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 80, tolerance: 10 } })
   );
 
   useEffect(() => {

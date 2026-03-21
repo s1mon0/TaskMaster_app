@@ -24,12 +24,17 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
     setIsEditing(false);
   };
 
+  // Vlastní transition místo výchozí dnd-kit hodnoty (~250ms ease)
+  // isDragging = žádná transition (pohyb okamžitý za prstem)
+  // drop = rychlý spring 120ms cubic-bezier jako iOS
   const style = {
     transform: CSS.Translate.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
-    // ✅ FIX: Zabraňuje "přilepení" elementu při drag na iOS
-    touchAction: isDragging ? 'none' : undefined,
+    transition: isDragging ? 'none' : 'transform 120ms cubic-bezier(0.25, 1, 0.5, 1), opacity 120ms ease',
+    opacity: isDragging ? 0.45 : 1,
+    scale: isDragging ? '1.03' : '1',
+    boxShadow: isDragging ? '0 8px 30px rgba(0,0,0,0.15)' : undefined,
+    zIndex: isDragging ? 999 : undefined,
+    touchAction: 'none',
   };
 
   // Barva štítku

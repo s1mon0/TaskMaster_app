@@ -26,8 +26,11 @@ export default function SidebarItem({ list, isActive, onClick, onDelete, onEdit 
 
   const style = {
     transform: CSS.Translate.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
+    transition: isDragging ? 'none' : 'transform 120ms cubic-bezier(0.25, 1, 0.5, 1), opacity 120ms ease',
+    opacity: isDragging ? 0.45 : 1,
+    scale: isDragging ? '1.02' : '1',
+    zIndex: isDragging ? 999 : undefined,
+    touchAction: 'none',
   };
 
   return (
