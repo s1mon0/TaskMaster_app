@@ -29,6 +29,9 @@ export default function App() {
   const [newListName, setNewListName] = useState('');
   const [newTaskText, setNewTaskText] = useState('');
 
+  // sortBy zde v App – onDragEndTask ho potřebuje (drag zakázán při alpha/date)
+  const [sortBy, setSortBy] = useState('manual');
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem('theme') === 'dark';
@@ -47,18 +50,18 @@ export default function App() {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     async function fetchData() {
       try {
         setError(null);
         const [{ data: listsData, error: listsError }, { data: tasksData, error: tasksError }] = await Promise.all([
           supabase.from('lists').select('*').order('position'),
-          supabase.from('tasks').select('*').order('position')
+          supabase.from('tasks').select('*').order('position'),
         ]);
-        
+
         if (listsError) throw listsError;
         if (tasksError) throw tasksError;
-        
+
         if (isMounted) {
           setLists(listsData || []);
           setTasks(tasksData || []);
@@ -69,7 +72,7 @@ export default function App() {
         if (isMounted) setIsLoading(false);
       }
     }
-    
+
     fetchData();
     return () => { isMounted = false; };
   }, []);
@@ -77,20 +80,20 @@ export default function App() {
   const handleCreateList = async (e) => {
     e.preventDefault();
     if (!newListName.trim()) return;
-    
+
     try {
       setError(null);
-      const maxPosition = lists.length > 0 
-        ? Math.max(...lists.map(l => l.position ?? 0)) + 1 
+      const maxPosition = lists.length > 0
+        ? Math.max(...lists.map(l => l.position ?? 0)) + 1
         : 0;
-      
+
       const { data, error } = await supabase
         .from('lists')
         .insert([{ name: newListName.trim(), position: maxPosition }])
         .select();
-        
+
       if (error) throw error;
-      
+
       if (data?.[0]) {
         setLists(prev => [...prev, data[0]]);
         setNewListName('');
@@ -104,7 +107,7 @@ export default function App() {
   const handleEditList = async (id, name) => {
     const previousLists = [...lists];
     setLists(lists.map(l => l.id === id ? { ...l, name } : l));
-    
+
     try {
       setError(null);
       const { error } = await supabase.from('lists').update({ name }).eq('id', id);
@@ -120,7 +123,7 @@ export default function App() {
       setError(null);
       const { error } = await supabase.from('lists').delete().eq('id', id);
       if (error) throw error;
-      
+
       setLists(prev => prev.filter(l => l.id !== id));
       if (activeListId === id) setActiveListId('my-day');
     } catch (err) {
@@ -140,25 +143,29 @@ export default function App() {
       if (activeListId === 'my-day') {
         let defaultList = lists.find(l => l.name === 'Úkoly');
         if (!defaultList) {
-          const maxPos = lists.length > 0 ? Math.max(...lists.map(l => l.position ?? 0)) + 1 : 0;
+          const maxPos = lists.length > 0
+            ? Math.max(...lists.map(l => l.position ?? 0)) + 1
+            : 0;
           const { data, error } = await supabase
             .from('lists')
             .insert([{ name: 'Úkoly', position: maxPos }])
             .select();
-            
+
           if (error) throw error;
-          if (data?.[0]) { 
-            defaultList = data[0]; 
-            setLists(prev => [...prev, defaultList]); 
-          }
-          else return;
+          if (data?.[0]) {
+            defaultList = data[0];
+            setLists(prev => [...prev, defaultList]);
+          } else return;
         }
         targetListId = defaultList.id;
         targetDate = new Date().toISOString().split('T')[0];
       }
 
-      const positionInList = Math.max(...tasks.filter(t => t.list_id === targetListId).map(t => t.position ?? -1), -1) + 1;
-      
+      const positionInList = Math.max(
+        ...tasks.filter(t => t.list_id === targetListId).map(t => t.position ?? -1),
+        -1
+      ) + 1;
+
       const { data, error } = await supabase
         .from('tasks')
         .insert([{
@@ -168,9 +175,9 @@ export default function App() {
           position: positionInList,
         }])
         .select();
-        
+
       if (error) throw error;
-      
+
       if (data?.[0]) {
         setTasks(prev => [...prev, data[0]]);
         setNewTaskText('');
@@ -183,7 +190,7 @@ export default function App() {
   const handleEditTask = async (id, text) => {
     const previousTasks = [...tasks];
     setTasks(tasks.map(t => t.id === id ? { ...t, text } : t));
-    
+
     try {
       setError(null);
       const { error } = await supabase.from('tasks').update({ text }).eq('id', id);
@@ -198,7 +205,7 @@ export default function App() {
     const is_done = !task.is_done;
     const previousTasks = [...tasks];
     setTasks(tasks.map(t => t.id === task.id ? { ...t, is_done } : t));
-    
+
     try {
       setError(null);
       const { error } = await supabase.from('tasks').update({ is_done }).eq('id', task.id);
@@ -214,7 +221,7 @@ export default function App() {
       setError(null);
       const { error } = await supabase.from('tasks').delete().eq('id', id);
       if (error) throw error;
-      
+
       setTasks(prev => prev.filter(t => t.id !== id));
       if (selectedTask?.id === id) setSelectedTask(null);
     } catch (err) {
@@ -224,19 +231,19 @@ export default function App() {
 
   const handleSaveTask = async () => {
     if (!selectedTask) return;
-    
+
     const previousTasks = [...tasks];
     const { id, text, due_date, notes, color } = selectedTask;
-    
+
     try {
       setError(null);
       setTasks(tasks.map(t => t.id === id ? selectedTask : t));
-      
+
       const { error } = await supabase
         .from('tasks')
         .update({ text, due_date, notes, color })
         .eq('id', id);
-        
+
       if (error) throw error;
       setSelectedTask(null);
     } catch (err) {
@@ -247,18 +254,17 @@ export default function App() {
 
   const onDragEndList = async ({ active, over }) => {
     if (!over || active.id === over.id) return;
-    
+
     const oldIndex = lists.findIndex(l => l.id === active.id);
     const newIndex = lists.findIndex(l => l.id === over.id);
     const newLists = arrayMove(lists, oldIndex, newIndex);
-    
     const previousLists = [...lists];
     setLists(newLists);
-    
+
     try {
       setError(null);
       await Promise.all(
-        newLists.map((l, i) => 
+        newLists.map((l, i) =>
           supabase.from('lists').update({ position: i }).eq('id', l.id)
         )
       );
@@ -284,11 +290,13 @@ export default function App() {
   };
 
   const onDragEndTask = async ({ active, over }) => {
+    // Drag zakázán při alpha/date – přepsal by position hodnoty
+    if (sortBy !== 'manual') return;
     if (!over || active.id === over.id) return;
 
     const currentTasks = getFilteredTasks();
     const oldIndex = currentTasks.findIndex(t => t.id === active.id);
-    const newIndex  = currentTasks.findIndex(t => t.id === over.id);
+    const newIndex = currentTasks.findIndex(t => t.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
     const reordered = arrayMove(currentTasks, oldIndex, newIndex);
@@ -331,17 +339,18 @@ export default function App() {
 
   return (
     <div className="flex h-[100dvh] bg-[#f2f2f7] dark:bg-black text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden transition-colors duration-300">
+
+      {/* Chybová hláška */}
       {error && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+        <div
+          className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-xl shadow-lg z-[100] text-sm font-medium cursor-pointer"
+          onClick={() => setError(null)}
+        >
           {error}
         </div>
       )}
-      
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragEnd={onDragEndList}
-      >
+
+      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEndList}>
         <Sidebar
           lists={lists} tasks={tasks} activeListId={activeListId}
           onListClick={setActiveListId} onEditList={handleEditList}
@@ -352,11 +361,7 @@ export default function App() {
         />
       </DndContext>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragEnd={onDragEndTask}
-      >
+      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEndTask}>
         <MainArea
           activeListId={activeListId} listName={activeListName} tasks={activeTasks}
           onBack={() => setActiveListId(null)} onToggleTask={handleToggleTask}
@@ -364,6 +369,7 @@ export default function App() {
           onTaskClick={setSelectedTask} progress={progress}
           newTaskText={newTaskText} setNewTaskText={setNewTaskText}
           onAddTask={handleAddTask}
+          sortBy={sortBy} setSortBy={setSortBy}
         />
       </DndContext>
 
