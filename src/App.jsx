@@ -5,7 +5,7 @@ import {
   DndContext,
   closestCorners,
   PointerSensor,
-  TouchSensor,        // ✅ FIX 1: Přidán TouchSensor pro iOS
+  TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -18,145 +18,258 @@ import TaskDetailModal from './components/Modals/TaskDetailModal';
 export default function App() {
   const [lists, setLists] = useState([]);
   const [tasks, setTasks] = useState([]);
-  // Na mobilu zobrazit sidebar (dlaždice) při startu, na desktopu rovnou "Můj den"
-  const [activeListId, setActiveListId] = useState(
-    () => window.innerWidth >= 768 ? 'my-day' : null
-  );
+  const [activeListId, setActiveListId] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    return window.innerWidth >= 768 ? 'my-day' : null;
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [error, setError] = useState(null);
 
   const [newListName, setNewListName] = useState('');
   const [newTaskText, setNewTaskText] = useState('');
 
-  const [isDarkMode, setIsDarkMode] = useState(
-    () => localStorage.getItem('theme') === 'dark'
-  );
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('theme') === 'dark';
+  });
 
-  // Delay 80ms = rychlý start jako Apple, tolerance 10 = odlišení od scrollu
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 80, tolerance: 10 } })
   );
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     document.documentElement.classList.toggle('dark', isDarkMode);
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
-  useEffect(() => { fetchData(); }, []);
-
-  async function fetchData() {
-    const { data: l } = await supabase.from('lists').select('*').order('position');
-    const { data: t } = await supabase.from('tasks').select('*').order('position');
-    setLists(l || []);
-    setTasks(t || []);
-    setIsLoading(false);
-  }
+  useEffect(() => {
+    let isMounted = true;
+    
+    async function fetchData() {
+      try {
+        setError(null);
+        const [{ data: listsData, error: listsError }, { data: tasksData, error: tasksError }] = await Promise.all([
+          supabase.from('lists').select('*').order('position'),
+          supabase.from('tasks').select('*').order('position')
+        ]);
+        
+        if (listsError) throw listsError;
+        if (tasksError) throw tasksError;
+        
+        if (isMounted) {
+          setLists(listsData || []);
+          setTasks(tasksData || []);
+        }
+      } catch (err) {
+        if (isMounted) setError(err.message);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    
+    fetchData();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleCreateList = async (e) => {
     e.preventDefault();
     if (!newListName.trim()) return;
-    const { data } = await supabase
-      .from('lists')
-      .insert([{ name: newListName.trim(), position: lists.length }])
-      .select();
-    if (data) {
-      setLists([...lists, data[0]]);
-      setNewListName('');
-      setActiveListId(data[0].id);
+    
+    try {
+      setError(null);
+      const maxPosition = lists.length > 0 
+        ? Math.max(...lists.map(l => l.position ?? 0)) + 1 
+        : 0;
+      
+      const { data, error } = await supabase
+        .from('lists')
+        .insert([{ name: newListName.trim(), position: maxPosition }])
+        .select();
+        
+      if (error) throw error;
+      
+      if (data?.[0]) {
+        setLists(prev => [...prev, data[0]]);
+        setNewListName('');
+        setActiveListId(data[0].id);
+      }
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   const handleEditList = async (id, name) => {
+    const previousLists = [...lists];
     setLists(lists.map(l => l.id === id ? { ...l, name } : l));
-    await supabase.from('lists').update({ name }).eq('id', id);
+    
+    try {
+      setError(null);
+      const { error } = await supabase.from('lists').update({ name }).eq('id', id);
+      if (error) throw error;
+    } catch (err) {
+      setLists(previousLists);
+      setError(err.message);
+    }
   };
 
   const handleDeleteList = async (id) => {
-    await supabase.from('lists').delete().eq('id', id);
-    setLists(lists.filter(l => l.id !== id));
-    if (activeListId === id) setActiveListId('my-day');
+    try {
+      setError(null);
+      const { error } = await supabase.from('lists').delete().eq('id', id);
+      if (error) throw error;
+      
+      setLists(prev => prev.filter(l => l.id !== id));
+      if (activeListId === id) setActiveListId('my-day');
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
 
-    let targetListId = activeListId;
-    let targetDate = null;
+    try {
+      setError(null);
+      let targetListId = activeListId;
+      let targetDate = null;
 
-    if (activeListId === 'my-day') {
-      let defaultList = lists.find(l => l.name === 'Úkoly');
-      if (!defaultList) {
-        const { data } = await supabase
-          .from('lists')
-          .insert([{ name: 'Úkoly', position: lists.length }])
-          .select();
-        if (data) { defaultList = data[0]; setLists([...lists, defaultList]); }
-        else return;
+      if (activeListId === 'my-day') {
+        let defaultList = lists.find(l => l.name === 'Úkoly');
+        if (!defaultList) {
+          const maxPos = lists.length > 0 ? Math.max(...lists.map(l => l.position ?? 0)) + 1 : 0;
+          const { data, error } = await supabase
+            .from('lists')
+            .insert([{ name: 'Úkoly', position: maxPos }])
+            .select();
+            
+          if (error) throw error;
+          if (data?.[0]) { 
+            defaultList = data[0]; 
+            setLists(prev => [...prev, defaultList]); 
+          }
+          else return;
+        }
+        targetListId = defaultList.id;
+        targetDate = new Date().toISOString().split('T')[0];
       }
-      targetListId = defaultList.id;
-      targetDate = new Date().toISOString().split('T')[0];
-    }
 
-    const positionInList = tasks.filter(t => t.list_id === targetListId).length;
-    const { data } = await supabase
-      .from('tasks')
-      .insert([{
-        list_id: targetListId,
-        text: newTaskText.trim(),
-        due_date: targetDate,
-        position: positionInList,
-      }])
-      .select();
-    if (data) { setTasks([...tasks, data[0]]); setNewTaskText(''); }
+      const positionInList = Math.max(...tasks.filter(t => t.list_id === targetListId).map(t => t.position ?? -1), -1) + 1;
+      
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{
+          list_id: targetListId,
+          text: newTaskText.trim(),
+          due_date: targetDate,
+          position: positionInList,
+        }])
+        .select();
+        
+      if (error) throw error;
+      
+      if (data?.[0]) {
+        setTasks(prev => [...prev, data[0]]);
+        setNewTaskText('');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const handleEditTask = async (id, text) => {
+    const previousTasks = [...tasks];
     setTasks(tasks.map(t => t.id === id ? { ...t, text } : t));
-    await supabase.from('tasks').update({ text }).eq('id', id);
+    
+    try {
+      setError(null);
+      const { error } = await supabase.from('tasks').update({ text }).eq('id', id);
+      if (error) throw error;
+    } catch (err) {
+      setTasks(previousTasks);
+      setError(err.message);
+    }
   };
 
   const handleToggleTask = async (task) => {
     const is_done = !task.is_done;
+    const previousTasks = [...tasks];
     setTasks(tasks.map(t => t.id === task.id ? { ...t, is_done } : t));
-    await supabase.from('tasks').update({ is_done }).eq('id', task.id);
+    
+    try {
+      setError(null);
+      const { error } = await supabase.from('tasks').update({ is_done }).eq('id', task.id);
+      if (error) throw error;
+    } catch (err) {
+      setTasks(previousTasks);
+      setError(err.message);
+    }
   };
 
   const handleDeleteTask = async (id) => {
-    await supabase.from('tasks').delete().eq('id', id);
-    setTasks(tasks.filter(t => t.id !== id));
-    if (selectedTask?.id === id) setSelectedTask(null);
+    try {
+      setError(null);
+      const { error } = await supabase.from('tasks').delete().eq('id', id);
+      if (error) throw error;
+      
+      setTasks(prev => prev.filter(t => t.id !== id));
+      if (selectedTask?.id === id) setSelectedTask(null);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  // ✅ FIX 3: Skutečné uložení do Supabase při kliknutí na "Uložit změny"
   const handleSaveTask = async () => {
     if (!selectedTask) return;
+    
+    const previousTasks = [...tasks];
     const { id, text, due_date, notes, color } = selectedTask;
-    setTasks(tasks.map(t => t.id === id ? selectedTask : t));
-    await supabase
-      .from('tasks')
-      .update({ text, due_date, notes, color })
-      .eq('id', id);
-    setSelectedTask(null);
+    
+    try {
+      setError(null);
+      setTasks(tasks.map(t => t.id === id ? selectedTask : t));
+      
+      const { error } = await supabase
+        .from('tasks')
+        .update({ text, due_date, notes, color })
+        .eq('id', id);
+        
+      if (error) throw error;
+      setSelectedTask(null);
+    } catch (err) {
+      setTasks(previousTasks);
+      setError(err.message);
+    }
   };
 
   const onDragEndList = async ({ active, over }) => {
     if (!over || active.id === over.id) return;
-    const newLists = arrayMove(
-      lists,
-      lists.findIndex(l => l.id === active.id),
-      lists.findIndex(l => l.id === over.id)
-    );
+    
+    const oldIndex = lists.findIndex(l => l.id === active.id);
+    const newIndex = lists.findIndex(l => l.id === over.id);
+    const newLists = arrayMove(lists, oldIndex, newIndex);
+    
+    const previousLists = [...lists];
     setLists(newLists);
-    newLists.forEach((l, i) =>
-      supabase.from('lists').update({ position: i }).eq('id', l.id)
-    );
+    
+    try {
+      setError(null);
+      await Promise.all(
+        newLists.map((l, i) => 
+          supabase.from('lists').update({ position: i }).eq('id', l.id)
+        )
+      );
+    } catch (err) {
+      setLists(previousLists);
+      setError(err.message);
+    }
   };
 
   const todayString = new Date().toISOString().split('T')[0];
 
-  // Vždy řadit podle position – jinak drag & drop nemá vizuální efekt po re-renderu
   const sortByPos = (arr) => [...arr].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
   const getFilteredTasks = () => {
@@ -173,26 +286,30 @@ export default function App() {
   const onDragEndTask = async ({ active, over }) => {
     if (!over || active.id === over.id) return;
 
-    // getFilteredTasks() je již seřazeno – arrayMove dá správné nové pořadí
     const currentTasks = getFilteredTasks();
     const oldIndex = currentTasks.findIndex(t => t.id === active.id);
     const newIndex  = currentTasks.findIndex(t => t.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
     const reordered = arrayMove(currentTasks, oldIndex, newIndex);
-
-    // Nové position hodnoty (násobky 10 = místo pro budoucí vkládání)
     const idToPos = new Map(reordered.map((t, i) => [t.id, i * 10]));
+    const previousTasks = [...tasks];
 
-    // Aktualizovat lokální state – zachovat ostatní tasky beze změny
     setTasks(prev =>
       prev.map(t => idToPos.has(t.id) ? { ...t, position: idToPos.get(t.id) } : t)
     );
 
-    // Uložit do Supabase
-    reordered.forEach((t, i) =>
-      supabase.from('tasks').update({ position: i * 10 }).eq('id', t.id)
-    );
+    try {
+      setError(null);
+      await Promise.all(
+        reordered.map((t, i) =>
+          supabase.from('tasks').update({ position: i * 10 }).eq('id', t.id)
+        )
+      );
+    } catch (err) {
+      setTasks(previousTasks);
+      setError(err.message);
+    }
   };
 
   const activeTasks = getFilteredTasks();
@@ -214,8 +331,12 @@ export default function App() {
 
   return (
     <div className="flex h-[100dvh] bg-[#f2f2f7] dark:bg-black text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden transition-colors duration-300">
-
-      {/* Sidebar – DnD pro přesouvání seznamů */}
+      {error && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          {error}
+        </div>
+      )}
+      
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -231,7 +352,6 @@ export default function App() {
         />
       </DndContext>
 
-      {/* ✅ FIX 2: Vlastní DnD kontext pro úkoly – dříve CHYBĚL */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
