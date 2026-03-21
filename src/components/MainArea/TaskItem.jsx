@@ -3,7 +3,7 @@ import { Circle, CheckCircle2, GripVertical, Pencil, Trash2, Calendar, AlignLeft
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) {
+export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, isManualSort = true }) {
   const {
     attributes,
     listeners,
@@ -11,7 +11,10 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({
+    id: task.id,
+    disabled: !isManualSort,
+  });
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(task.text);
@@ -24,7 +27,6 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
     setIsEditing(false);
   };
 
-  // Vlastní transition místo výchozí dnd-kit hodnoty (~250ms ease)
   const style = {
     transform: CSS.Translate.toString(transform),
     transition: isDragging ? 'none' : 'transform 120ms cubic-bezier(0.25, 1, 0.5, 1), opacity 120ms ease',
@@ -36,8 +38,6 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
   };
 
   const dotColor = task.color || null;
-
-  // --- PŘIDÁNA ZTRACENÁ LOGIKA PRO TERMÍNY ---
   const todayString = new Date().toISOString().split('T')[0];
   const isOverdue = task.due_date && task.due_date < todayString && !task.is_done;
   const isToday = task.due_date === todayString && !task.is_done;
@@ -50,14 +50,17 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
       className="group flex items-center justify-between p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl border border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] shadow-sm active:scale-[0.99] transition-transform min-w-0 overflow-hidden cursor-pointer"
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        {/* Grip handle */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-300 dark:text-gray-600 hover:text-gray-500 p-1 -ml-2 touch-none shrink-0"
-        >
-          <GripVertical size={18} />
-        </div>
+
+        {/* Grip – na mobilu vždy viditelný, na desktopu jen při hover */}
+        {isManualSort && (
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing text-gray-300 dark:text-gray-600 hover:text-gray-500 p-1 -ml-2 touch-none shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          >
+            <GripVertical size={18} />
+          </div>
+        )}
 
         {/* Toggle done */}
         <button
@@ -70,10 +73,10 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
           }
         </button>
 
-        {/* --- ÚPRAVA: Text a datum pod sebou --- */}
+        {/* Text + datum/poznámka pod sebou */}
         <div className="flex flex-col flex-1 justify-center min-w-0">
-          <div className="flex items-center gap-2">
-            {/* Štítek (barevná tečka) */}
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Barevný štítek */}
             {dotColor && !isEditing && (
               <span
                 className="w-2 h-2 rounded-full shrink-0"
@@ -81,7 +84,7 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
               />
             )}
 
-            {/* Text / edit */}
+            {/* Text / edit input */}
             {isEditing ? (
               <input
                 autoFocus
@@ -97,7 +100,9 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
                 className={`flex-1 truncate text-base ${
                   task.is_done
                     ? 'line-through text-gray-400'
-                    : isOverdue ? 'text-[#ff3b30] dark:text-[#ff453a]' : 'text-[#1c1c1e] dark:text-[#f5f5f7]'
+                    : isOverdue
+                      ? 'text-[#ff3b30] dark:text-[#ff453a]'
+                      : 'text-[#1c1c1e] dark:text-[#f5f5f7]'
                 }`}
               >
                 {task.text}
@@ -105,22 +110,33 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit }) 
             )}
           </div>
 
-          {/* PŘIDÁNO ZPĚT: Zobrazení termínu a poznámky pod textem */}
+          {/* Termín + poznámka pod textem */}
           {(task.due_date || task.notes) && !isEditing && (
-             <div className="flex items-center gap-3 mt-1 text-[13px] text-gray-400 dark:text-gray-500">
-               {task.due_date && (
-                 <span className={`flex items-center gap-1 ${isOverdue ? 'text-[#ff3b30] dark:text-[#ff453a] font-bold' : isToday ? 'text-[#ff9500] font-medium' : ''}`}>
-                   <Calendar size={12}/> 
-                   {isOverdue ? 'Zpožděno: ' : ''}{new Date(task.due_date).toLocaleDateString('cs-CZ')}
-                 </span>
-               )}
-               {task.notes && <span className="flex items-center gap-1"><AlignLeft size={12}/> Poznámka</span>}
-             </div>
+            <div className="flex items-center gap-3 mt-1 text-[13px] text-gray-400 dark:text-gray-500 min-w-0 truncate">
+              {task.due_date && (
+                <span className={`flex items-center gap-1 shrink-0 ${
+                  isOverdue
+                    ? 'text-[#ff3b30] dark:text-[#ff453a] font-bold'
+                    : isToday
+                      ? 'text-[#ff9500] font-medium'
+                      : ''
+                }`}>
+                  <Calendar size={12} />
+                  {isOverdue ? 'Zpožděno: ' : ''}
+                  {new Date(task.due_date).toLocaleDateString('cs-CZ')}
+                </span>
+              )}
+              {task.notes && (
+                <span className="flex items-center gap-1 truncate">
+                  <AlignLeft size={12} className="shrink-0" /> Poznámka
+                </span>
+              )}
+            </div>
           )}
         </div>
       </div>
 
-      {/* Tlačítka s tvou opravenou logikou pro mobil (md:opacity-0) */}
+      {/* Edit/Delete – na mobilu vždy, na desktopu jen při hover */}
       <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0 ml-2">
         <button
           onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}

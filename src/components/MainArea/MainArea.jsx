@@ -151,7 +151,7 @@ export default function MainArea({
                 onClick={onTaskClick}
                 onDelete={onDeleteTask}
                 onEdit={onEditTask}
-                dragDisabled={!isDragEnabled}
+                isManualSort={isDragEnabled}
               />
             ))}
           </SortableContext>
