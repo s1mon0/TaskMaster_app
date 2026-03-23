@@ -14,8 +14,25 @@ import { arrayMove } from '@dnd-kit/sortable';
 import Sidebar from './components/Sidebar/Sidebar';
 import MainArea from './components/MainArea/MainArea';
 import TaskDetailModal from './components/Modals/TaskDetailModal';
+import LoginPage from './components/Login/LoginPage';
 
 export default function App() {
+  // ─── Auth ────────────────────────────────────────────────────────
+  const [session, setSession] = useState(undefined);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ─── Data ────────────────────────────────────────────────────────
   const [lists, setLists] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [activeListId, setActiveListId] = useState(() => {
@@ -28,8 +45,6 @@ export default function App() {
 
   const [newListName, setNewListName] = useState('');
   const [newTaskText, setNewTaskText] = useState('');
-
-  // sortBy zde v App – onDragEndTask ho potřebuje (drag zakázán při alpha/date)
   const [sortBy, setSortBy] = useState('manual');
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -49,9 +64,11 @@ export default function App() {
   }, [isDarkMode]);
 
   useEffect(() => {
+    if (!session) return;
     let isMounted = true;
 
     async function fetchData() {
+      setIsLoading(true);
       try {
         setError(null);
         const [{ data: listsData, error: listsError }, { data: tasksData, error: tasksError }] = await Promise.all([
@@ -75,8 +92,17 @@ export default function App() {
 
     fetchData();
     return () => { isMounted = false; };
-  }, []);
+  }, [session]);
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setLists([]);
+    setTasks([]);
+    setSelectedTask(null);
+    setActiveListId(null);
+  };
+
+  // ─── CRUD operace (OPRAVENO: přidáno user_id) ─────────────────────
   const handleCreateList = async (e) => {
     e.preventDefault();
     if (!newListName.trim()) return;
@@ -89,11 +115,14 @@ export default function App() {
 
       const { data, error } = await supabase
         .from('lists')
-        .insert([{ name: newListName.trim(), position: maxPosition }])
+        .insert([{ 
+          name: newListName.trim(), 
+          position: maxPosition,
+          user_id: session.user.id // OPRAVA ZDE
+        }])
         .select();
 
       if (error) throw error;
-
       if (data?.[0]) {
         setLists(prev => [...prev, data[0]]);
         setNewListName('');
@@ -107,7 +136,6 @@ export default function App() {
   const handleEditList = async (id, name) => {
     const previousLists = [...lists];
     setLists(lists.map(l => l.id === id ? { ...l, name } : l));
-
     try {
       setError(null);
       const { error } = await supabase.from('lists').update({ name }).eq('id', id);
@@ -148,7 +176,11 @@ export default function App() {
             : 0;
           const { data, error } = await supabase
             .from('lists')
-            .insert([{ name: 'Úkoly', position: maxPos }])
+            .insert([{ 
+              name: 'Úkoly', 
+              position: maxPos,
+              user_id: session.user.id // OPRAVA ZDE
+            }])
             .select();
 
           if (error) throw error;
@@ -173,11 +205,11 @@ export default function App() {
           text: newTaskText.trim(),
           due_date: targetDate,
           position: positionInList,
+          user_id: session.user.id // OPRAVA ZDE
         }])
         .select();
 
       if (error) throw error;
-
       if (data?.[0]) {
         setTasks(prev => [...prev, data[0]]);
         setNewTaskText('');
@@ -190,7 +222,6 @@ export default function App() {
   const handleEditTask = async (id, text) => {
     const previousTasks = [...tasks];
     setTasks(tasks.map(t => t.id === id ? { ...t, text } : t));
-
     try {
       setError(null);
       const { error } = await supabase.from('tasks').update({ text }).eq('id', id);
@@ -205,7 +236,6 @@ export default function App() {
     const is_done = !task.is_done;
     const previousTasks = [...tasks];
     setTasks(tasks.map(t => t.id === task.id ? { ...t, is_done } : t));
-
     try {
       setError(null);
       const { error } = await supabase.from('tasks').update({ is_done }).eq('id', task.id);
@@ -231,7 +261,6 @@ export default function App() {
 
   const handleSaveTask = async () => {
     if (!selectedTask) return;
-
     const previousTasks = [...tasks];
     const { id, text, due_date, notes, color } = selectedTask;
 
@@ -254,7 +283,6 @@ export default function App() {
 
   const onDragEndList = async ({ active, over }) => {
     if (!over || active.id === over.id) return;
-
     const oldIndex = lists.findIndex(l => l.id === active.id);
     const newIndex = lists.findIndex(l => l.id === over.id);
     const newLists = arrayMove(lists, oldIndex, newIndex);
@@ -275,7 +303,6 @@ export default function App() {
   };
 
   const todayString = new Date().toISOString().split('T')[0];
-
   const sortByPos = (arr) => [...arr].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
   const getFilteredTasks = () => {
@@ -290,7 +317,6 @@ export default function App() {
   };
 
   const onDragEndTask = async ({ active, over }) => {
-    // Drag zakázán při alpha/date – přepsal by position hodnoty
     if (sortBy !== 'manual') return;
     if (!over || active.id === over.id) return;
 
@@ -320,6 +346,22 @@ export default function App() {
     }
   };
 
+  // ─── Render logika ───────────────────────────────────────────────
+
+  if (session === undefined) return (
+    <div className="h-screen flex items-center justify-center dark:bg-black">
+      <Loader2 className="animate-spin text-[#007aff]" size={48} />
+    </div>
+  );
+
+  if (!session) return <LoginPage isDarkMode={isDarkMode} />;
+
+  if (isLoading) return (
+    <div className="h-screen flex items-center justify-center dark:bg-black">
+      <Loader2 className="animate-spin text-[#007aff]" size={48} />
+    </div>
+  );
+
   const activeTasks = getFilteredTasks();
   const activeListName =
     activeListId === 'my-day' ? 'Můj den' :
@@ -331,16 +373,9 @@ export default function App() {
     ? Math.round((activeTasks.filter(t => t.is_done).length / activeTasks.length) * 100)
     : 0;
 
-  if (isLoading) return (
-    <div className="h-screen flex items-center justify-center dark:bg-black">
-      <Loader2 className="animate-spin text-[#007aff]" size={48} />
-    </div>
-  );
-
   return (
     <div className="flex h-[100dvh] bg-[#f2f2f7] dark:bg-black text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden transition-colors duration-300">
 
-      {/* Chybová hláška */}
       {error && (
         <div
           className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-xl shadow-lg z-[100] text-sm font-medium cursor-pointer"
@@ -358,6 +393,8 @@ export default function App() {
           isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
           newListName={newListName} setNewListName={setNewListName}
           onCreateList={handleCreateList}
+          user={session.user} // Předáváme uživatele do postranního panelu
+          onSignOut={handleSignOut} // Předáváme funkci pro odhlášení
         />
       </DndContext>
 
@@ -369,7 +406,7 @@ export default function App() {
           onTaskClick={setSelectedTask} progress={progress}
           newTaskText={newTaskText} setNewTaskText={setNewTaskText}
           onAddTask={handleAddTask}
-          sortBy={sortBy} setSortBy={setSortBy}
+          sortBy={sortBy} setSortBy={setSortBy} // Claude to chytře poslal sem jako props
         />
       </DndContext>
 

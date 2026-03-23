@@ -1,11 +1,12 @@
 import React from 'react';
-import { Sun, Moon, Star, Calendar, Infinity as AllIcon } from 'lucide-react';
+import { Sun, Moon, Star, Calendar, Infinity as AllIcon, LogOut } from 'lucide-react';
 import SidebarItem from './SidebarItem';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 export default function Sidebar({
   lists, activeListId, onListClick, onCreateList, onDeleteList, onEditList,
   isDarkMode, toggleDarkMode, tasks, newListName, setNewListName,
+  user, onSignOut,   // ← nové props pro auth
 }) {
   const todayString = new Date().toISOString().split('T')[0];
 
@@ -32,17 +33,45 @@ export default function Sidebar({
         activeListId ? 'hidden md:flex' : 'flex'
       } z-10 transition-colors duration-300`}
     >
-      {/* ✅ FIX: safe-area-inset-top pro Dynamic Island / notch na iPhonu */}
+      {/* Header – avatar + dark mode + logout */}
       <div
-        className="px-6 pb-4 flex items-center justify-end"
+        className="px-6 pb-4 flex items-center justify-between"
         style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}
       >
-        <button
-          onClick={toggleDarkMode}
-          className="p-2.5 rounded-full bg-white dark:bg-[#1c1c1e] shadow-sm hover:scale-105 active:scale-95 transition-transform text-gray-800 dark:text-gray-200"
-        >
-          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
+        {/* Avatar + jméno uživatele */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          {user?.user_metadata?.avatar_url ? (
+            <img
+              src={user.user_metadata.avatar_url}
+              alt="avatar"
+              className="w-8 h-8 rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-[#007aff] flex items-center justify-center text-white text-sm font-bold shrink-0">
+              {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
+            </div>
+          )}
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Uživatel'}
+          </span>
+        </div>
+
+        {/* Dark mode + odhlásit */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={toggleDarkMode}
+            className="p-2.5 rounded-full bg-white dark:bg-[#1c1c1e] shadow-sm hover:scale-105 active:scale-95 transition-transform text-gray-800 dark:text-gray-200"
+          >
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button
+            onClick={onSignOut}
+            title="Odhlásit se"
+            className="p-2.5 rounded-full bg-white dark:bg-[#1c1c1e] shadow-sm hover:scale-105 active:scale-95 transition-transform text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-2 space-y-10 pb-10">
@@ -129,7 +158,6 @@ export default function Sidebar({
           </SortableContext>
 
           <form onSubmit={onCreateList} className="mt-5 px-1 relative">
-            {/* ✅ FIX: text-base = 16px zabraňuje zoom na iOS */}
             <input
               type="text"
               value={newListName}
