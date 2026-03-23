@@ -6,7 +6,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 export default function Sidebar({
   lists, activeListId, onListClick, onCreateList, onDeleteList, onEditList,
   isDarkMode, toggleDarkMode, tasks, newListName, setNewListName,
-  user, onSignOut,   // ← nové props pro auth
+  user, onSignOut,
 }) {
   const todayString = new Date().toISOString().split('T')[0];
 
@@ -33,55 +33,63 @@ export default function Sidebar({
         activeListId ? 'hidden md:flex' : 'flex'
       } z-10 transition-colors duration-300`}
     >
-      {/* Header – avatar + dark mode + logout */}
+      {/* --- VYLEPŠENÝ HEADER START --- */}
       <div
-        className="px-6 pb-4 flex items-center justify-between"
+        className="px-6 pb-6 flex items-center justify-between border-b border-gray-200/50 dark:border-white/5 mb-2"
         style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}
       >
-        {/* Avatar + jméno uživatele */}
-        <div className="flex items-center gap-2.5 min-w-0">
-          {user?.user_metadata?.avatar_url ? (
-            <img
-              src={user.user_metadata.avatar_url}
-              alt="avatar"
-              className="w-8 h-8 rounded-full object-cover shrink-0"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-[#007aff] flex items-center justify-center text-white text-sm font-bold shrink-0">
-              {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
-            </div>
-          )}
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Uživatel'}
-          </span>
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="relative shrink-0">
+            {user?.user_metadata?.avatar_url ? (
+              <img
+                src={user.user_metadata.avatar_url}
+                alt="avatar"
+                className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-[#1c1c1e] shadow-sm"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#007aff] to-[#5856d6] flex items-center justify-center text-white shadow-lg border-2 border-white dark:border-[#1c1c1e]">
+                <span className="text-sm font-bold tracking-tight">
+                  {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
+                </span>
+              </div>
+            )}
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-[#f2f2f7] dark:border-black rounded-full shadow-sm"></div>
+          </div>
+
+          <div className="flex flex-col min-w-0">
+            <span className="text-[15px] font-bold text-gray-900 dark:text-white truncate leading-tight">
+              {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Uživatel'}
+            </span>
+            <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+              TaskMaster Cloud
+            </span>
+          </div>
         </div>
 
-        {/* Dark mode + odhlásit */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={toggleDarkMode}
-            className="p-2.5 rounded-full bg-white dark:bg-[#1c1c1e] shadow-sm hover:scale-105 active:scale-95 transition-transform text-gray-800 dark:text-gray-200"
+            className="p-2 rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#1c1c1e] text-gray-600 dark:text-gray-400 transition-colors"
           >
-            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            {isDarkMode ? <Sun size={19} /> : <Moon size={19} />}
           </button>
           <button
             onClick={onSignOut}
+            className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
             title="Odhlásit se"
-            className="p-2.5 rounded-full bg-white dark:bg-[#1c1c1e] shadow-sm hover:scale-105 active:scale-95 transition-transform text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
           >
-            <LogOut size={18} />
+            <LogOut size={19} />
           </button>
         </div>
       </div>
+      {/* --- VYLEPŠENÝ HEADER END --- */}
 
       <div className="flex-1 overflow-y-auto px-6 py-2 space-y-10 pb-10">
-        {/* Chytré přehledy */}
         <div>
           <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-3.5 tracking-wider">
             Chytré přehledy
           </p>
           <div className="grid grid-cols-2 gap-4">
-
             <div onClick={() => onListClick('my-day')} className={getTileClass('my-day')}>
               <div className="flex justify-between items-start mb-3">
                 <div className="bg-[#ff9500] p-2.5 rounded-full text-white shadow-sm">
@@ -137,7 +145,6 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Moje seznamy */}
         <div>
           <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-3 tracking-wider">
             Moje seznamy
