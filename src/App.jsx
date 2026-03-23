@@ -14,7 +14,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import Sidebar from './components/Sidebar/Sidebar';
 import MainArea from './components/MainArea/MainArea';
 import TaskDetailModal from './components/Modals/TaskDetailModal';
-import LoginPage from './components/Login/LoginPage';
+import LoginPage from './components/Login/Loginpage';
 
 export default function App() {
   // ─── Auth ────────────────────────────────────────────────────────
