@@ -28,12 +28,16 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
   };
 
   const style = {
-    transform: CSS.Translate.toString(transform),
+    // scale musí být součástí transform – jinak vytváří vlastní stacking context
+    // a zIndex 999 pak nemá efekt (item jede pod ostatními)
+    transform: isDragging
+      ? `${CSS.Translate.toString(transform)} scale(1.03)`
+      : CSS.Translate.toString(transform),
     transition: isDragging ? 'none' : 'transform 120ms cubic-bezier(0.25, 1, 0.5, 1), opacity 120ms ease',
     opacity: isDragging ? 0.45 : 1,
-    scale: isDragging ? '1.03' : '1',
-    boxShadow: isDragging ? '0 8px 30px rgba(0,0,0,0.15)' : undefined,
-    zIndex: isDragging ? 999 : undefined,
+    boxShadow: isDragging ? '0 12px 40px rgba(0,0,0,0.18)' : undefined,
+    position: 'relative',
+    zIndex: isDragging ? 999 : 'auto',
     touchAction: 'none',
   };
 
@@ -47,7 +51,7 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
       ref={setNodeRef}
       style={style}
       onClick={() => !isEditing && onClick(task)}
-      className="group flex items-center justify-between p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl border border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] shadow-sm active:scale-[0.99] transition-transform min-w-0 overflow-hidden cursor-pointer"
+      className="group flex items-center justify-between p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl border border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] shadow-sm active:scale-[0.99] transition-transform min-w-0 cursor-pointer"
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
 
@@ -75,7 +79,7 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
 
         {/* Text + datum/poznámka pod sebou */}
         <div className="flex flex-col flex-1 justify-center min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
             {/* Barevný štítek */}
             {dotColor && !isEditing && (
               <span
