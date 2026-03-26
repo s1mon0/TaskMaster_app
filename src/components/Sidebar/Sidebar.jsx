@@ -1,12 +1,12 @@
 import React from 'react';
-import { Sun, Moon, Star, Calendar, Infinity as AllIcon, LogOut } from 'lucide-react';
+import { Sun, Moon, Star, Calendar, Infinity as AllIcon, LogOut, Plus } from 'lucide-react';
 import SidebarItem from './SidebarItem';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 export default function Sidebar({
   lists, activeListId, onListClick, onCreateList, onDeleteList, onEditList,
   isDarkMode, toggleDarkMode, tasks, newListName, setNewListName,
-  user, onSignOut,
+  user, onSignOut,   // ← nové props pro auth
 }) {
   const todayString = new Date().toISOString().split('T')[0];
 
@@ -33,63 +33,55 @@ export default function Sidebar({
         activeListId ? 'hidden md:flex' : 'flex'
       } z-10 transition-colors duration-300`}
     >
-      {/* --- VYLEPŠENÝ HEADER START --- */}
+      {/* Header – avatar + dark mode + logout */}
       <div
-        className="px-6 pb-6 flex items-center justify-between border-b border-gray-200/50 dark:border-white/5 mb-2"
+        className="px-6 pb-4 flex items-center justify-between"
         style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="relative shrink-0">
-            {user?.user_metadata?.avatar_url ? (
-              <img
-                src={user.user_metadata.avatar_url}
-                alt="avatar"
-                className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-[#1c1c1e] shadow-sm"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#007aff] to-[#5856d6] flex items-center justify-center text-white shadow-lg border-2 border-white dark:border-[#1c1c1e]">
-                <span className="text-sm font-bold tracking-tight">
-                  {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
-                </span>
-              </div>
-            )}
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-[#f2f2f7] dark:border-black rounded-full shadow-sm"></div>
-          </div>
-
-          <div className="flex flex-col min-w-0">
-            <span className="text-[15px] font-bold text-gray-900 dark:text-white truncate leading-tight">
-              {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Uživatel'}
-            </span>
-            <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-              TaskMaster Cloud
-            </span>
-          </div>
+        {/* Avatar + jméno uživatele */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          {user?.user_metadata?.avatar_url ? (
+            <img
+              src={user.user_metadata.avatar_url}
+              alt="avatar"
+              className="w-8 h-8 rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-[#007aff] flex items-center justify-center text-white text-sm font-bold shrink-0">
+              {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
+            </div>
+          )}
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Uživatel'}
+          </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Dark mode + odhlásit */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={toggleDarkMode}
-            className="p-2 rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#1c1c1e] text-gray-600 dark:text-gray-400 transition-colors"
+            className="p-2.5 rounded-full bg-white dark:bg-[#1c1c1e] shadow-sm hover:scale-105 active:scale-95 transition-transform text-gray-800 dark:text-gray-200"
           >
-            {isDarkMode ? <Sun size={19} /> : <Moon size={19} />}
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           <button
             onClick={onSignOut}
-            className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
             title="Odhlásit se"
+            className="p-2.5 rounded-full bg-white dark:bg-[#1c1c1e] shadow-sm hover:scale-105 active:scale-95 transition-transform text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
           >
-            <LogOut size={19} />
+            <LogOut size={18} />
           </button>
         </div>
       </div>
-      {/* --- VYLEPŠENÝ HEADER END --- */}
 
       <div className="flex-1 overflow-y-auto px-6 py-2 space-y-10 pb-10">
+        {/* Chytré přehledy */}
         <div>
           <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-3.5 tracking-wider">
             Chytré přehledy
           </p>
           <div className="grid grid-cols-2 gap-4">
+
             <div onClick={() => onListClick('my-day')} className={getTileClass('my-day')}>
               <div className="flex justify-between items-start mb-3">
                 <div className="bg-[#ff9500] p-2.5 rounded-full text-white shadow-sm">
@@ -145,6 +137,7 @@ export default function Sidebar({
           </div>
         </div>
 
+        {/* Moje seznamy */}
         <div>
           <p className="px-4 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-3 tracking-wider">
             Moje seznamy
@@ -164,24 +157,35 @@ export default function Sidebar({
             </div>
           </SortableContext>
 
-          <form onSubmit={onCreateList} className="mt-5 px-1 relative">
-            <input
-              type="text"
-              value={newListName}
-              onChange={(e) => setNewListName(e.target.value)}
-              placeholder="Nový seznam..."
-              className="w-full bg-transparent py-3.5 pl-4 pr-16 outline-none text-[#1c1c1e] dark:text-white placeholder:text-gray-400 focus:bg-white dark:focus:bg-[#1c1c1e] rounded-xl transition-all border border-transparent focus:border-gray-200 dark:focus:border-gray-800 focus:shadow-sm text-base"
-            />
-            {newListName.trim() && (
-              <button
-                type="submit"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#007aff] font-semibold text-sm active:opacity-60"
-              >
-                Přidat
-              </button>
-            )}
-          </form>
         </div>
+      </div>
+      {/* Sticky bottom bar – přidání seznamu */}
+      <div
+        className="px-4 pt-2 bg-[#f2f2f7] dark:bg-[#000000] border-t border-gray-200/60 dark:border-gray-800/60"
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
+        <form onSubmit={onCreateList} className="relative">
+          <input
+            type="text"
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            placeholder="Nový seznam..."
+            className="w-full bg-white dark:bg-[#1c1c1e] rounded-2xl py-3.5 pl-11 pr-4 outline-none text-base text-[#1c1c1e] dark:text-white placeholder:text-gray-400 border border-gray-200 dark:border-gray-800 focus:border-[#007aff] dark:focus:border-[#007aff] transition-colors shadow-sm"
+          />
+          {/* + ikona vlevo – vždy viditelná */}
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#007aff] pointer-events-none">
+            <Plus size={20} strokeWidth={2.5} />
+          </div>
+          {/* Tlačítko přidat – objeví se jen při psaní */}
+          {newListName.trim() && (
+            <button
+              type="submit"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#007aff] font-semibold text-sm active:opacity-60 transition-opacity"
+            >
+              Přidat
+            </button>
+          )}
+        </form>
       </div>
     </div>
   );
