@@ -28,8 +28,6 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
   };
 
   const style = {
-    // scale musí být součástí transform – jinak vytváří vlastní stacking context
-    // a zIndex 999 pak nemá efekt (item jede pod ostatními)
     transform: isDragging
       ? `${CSS.Translate.toString(transform)} scale(1.03)`
       : CSS.Translate.toString(transform),
@@ -51,16 +49,17 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
       ref={setNodeRef}
       style={style}
       onClick={() => !isEditing && onClick(task)}
-      className="group flex items-center justify-between p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl border border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] shadow-sm active:scale-[0.99] transition-transform min-w-0 cursor-pointer"
+      // Odstraněno min-w-0, přidáno h-auto pro přizpůsobení výšce textu
+      className="group flex items-start justify-between p-4 mb-2 bg-white dark:bg-[#1c1c1e] rounded-xl border border-transparent hover:border-gray-100 dark:hover:border-[#2c2c2e] shadow-sm active:scale-[0.99] transition-transform cursor-pointer h-auto"
     >
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div className="flex items-start gap-3 flex-1">
 
-        {/* Grip – na mobilu vždy viditelný, na desktopu jen při hover */}
+        {/* Grip */}
         {isManualSort && (
           <div
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-gray-300 dark:text-gray-600 hover:text-gray-500 p-1 -ml-2 touch-none shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+            className="cursor-grab active:cursor-grabbing text-gray-300 dark:text-gray-600 hover:text-gray-500 p-1 -ml-2 mt-0.5 touch-none shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
           >
             <GripVertical size={18} />
           </div>
@@ -69,7 +68,7 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
         {/* Toggle done */}
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(task); }}
-          className="shrink-0 active:scale-90 transition-transform"
+          className="shrink-0 mt-0.5 active:scale-90 transition-transform"
         >
           {task.is_done
             ? <CheckCircle2 className="text-[#007aff]" size={24} />
@@ -78,12 +77,12 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
         </button>
 
         {/* Text + datum/poznámka pod sebou */}
-        <div className="flex flex-col flex-1 justify-center min-w-0">
-          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-            {/* Barevný štítek */}
+        <div className="flex flex-col flex-1 justify-center">
+          <div className="flex items-start gap-2">
+            {/* Barevný štítek (zarovnaný nahoru s textem) */}
             {dotColor && !isEditing && (
               <span
-                className="w-2 h-2 rounded-full shrink-0"
+                className="w-2 h-2 rounded-full shrink-0 mt-2"
                 style={{ backgroundColor: dotColor }}
               />
             )}
@@ -96,12 +95,13 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
                 onChange={(e) => setEditValue(e.target.value)}
                 onBlur={handleSave}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave(e)}
-                className="bg-transparent outline-none flex-1 border-b border-[#007aff] text-[#1c1c1e] dark:text-white text-base min-w-0 py-0.5"
+                className="bg-transparent outline-none flex-1 border-b border-[#007aff] text-[#1c1c1e] dark:text-white text-base py-0.5 w-full"
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
               <span
-                className={`flex-1 truncate text-base ${
+                // OPRAVA ZDE: Odstraněno truncate, přidáno break-words a whitespace-normal
+                className={`flex-1 text-base break-words whitespace-normal leading-snug py-0.5 ${
                   task.is_done
                     ? 'line-through text-gray-400'
                     : isOverdue
@@ -116,7 +116,8 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
 
           {/* Termín + poznámka pod textem */}
           {(task.due_date || task.notes) && !isEditing && (
-            <div className="flex items-center gap-3 mt-1 text-[13px] text-gray-400 dark:text-gray-500 min-w-0 truncate">
+            // OPRAVA ZDE: Odstraněno truncate i min-w-0, aby se i poznámka mohla zalamovat nebo aspoň nezmizela
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[13px] text-gray-400 dark:text-gray-500">
               {task.due_date && (
                 <span className={`flex items-center gap-1 shrink-0 ${
                   isOverdue
@@ -131,7 +132,8 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
                 </span>
               )}
               {task.notes && (
-                <span className="flex items-center gap-1 truncate">
+                // OPRAVA ZDE: Odstraněno truncate
+                <span className="flex items-center gap-1 break-words whitespace-normal leading-snug">
                   <AlignLeft size={12} className="shrink-0" /> Poznámka
                 </span>
               )}
@@ -140,8 +142,8 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
         </div>
       </div>
 
-      {/* Edit/Delete – na mobilu vždy, na desktopu jen při hover */}
-      <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+      {/* Edit/Delete */}
+      <div className="flex items-start gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0 ml-3 mt-0.5">
         <button
           onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
           className="text-gray-400 hover:text-[#007aff] active:scale-90 transition-transform p-1"
