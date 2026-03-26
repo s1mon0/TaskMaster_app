@@ -109,22 +109,24 @@ export default function App() {
 
     try {
       setError(null);
-      const maxPosition = lists.length > 0
-        ? Math.max(...lists.map(l => l.position ?? 0)) + 1
+      // ZMĚNA 1: Najdeme nejmenší pozici a odečteme 1
+      const minPosition = lists.length > 0
+        ? Math.min(...lists.map(l => l.position ?? 0)) - 1
         : 0;
 
       const { data, error } = await supabase
         .from('lists')
         .insert([{ 
           name: newListName.trim(), 
-          position: maxPosition,
-          user_id: session.user.id // OPRAVA ZDE
+          position: minPosition,
+          user_id: session.user.id 
         }])
         .select();
 
       if (error) throw error;
       if (data?.[0]) {
-        setLists(prev => [...prev, data[0]]);
+        // ZMĚNA 2: data[0] dáme na začátek pole prev
+        setLists(prev => [data[0], ...prev]);
         setNewListName('');
         setActiveListId(data[0].id);
       }
