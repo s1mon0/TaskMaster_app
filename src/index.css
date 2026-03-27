@@ -22,63 +22,47 @@ html, body {
 
 /* ─── iOS Safari opravy ─────────────────────────────────────────── */
 
-/* ✅ FIX: Odstraní modrý/šedý blik při klepnutí na iOS */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ✅ FIX: Globálně font-size 16px pro všechny inputy a textarea
-   iOS Safari auto-zoomuje při focus, pokud je font-size < 16px */
-input,
-textarea,
-select {
+input, textarea, select {
   font-size: 16px;
 }
 
-/* ✅ FIX: Zabraňuje "bounce" efektu při scrollování na iOS ve web-app režimu */
 body {
   -webkit-overflow-scrolling: auto;
 }
 
-/* ✅ FIX: Podpora pro safe area (notch, Dynamic Island, home bar) */
-.safe-top {
-  padding-top: env(safe-area-inset-top);
-}
-.safe-bottom {
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
-}
+/* ─── Safe area ─────────────────────────────────────────────────── */
+.safe-top  { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────── */
-::-webkit-scrollbar {
-  display: none;
+::-webkit-scrollbar { display: none; }
+
+/* ─── FIX: Hover efekty jen pro zařízení s myší ────────────────────
+   Na iOS touch spouští :hover stav při scrollu → položky šedivějí.
+   @media (hover: hover) zajistí že hover styly platí jen s myší.   */
+@media (hover: hover) {
+  .list-item-hover:hover {
+    background-color: rgba(255, 255, 255, 1);
+  }
+  .dark .list-item-hover:hover {
+    background-color: #1c1c1e;
+  }
 }
-
-/* ─── Drag & drop ───────────────────────────────────────────────── */
-
-/* ✅ FIX: Při aktivním drag nemá docházet ke scrollu
-   touch-none se aplikuje přes Tailwind třídu přímo na grip handle */
 
 /* ─── Animace modalu ────────────────────────────────────────────── */
 @keyframes slide-in-from-bottom {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 .animate-in.slide-in-from-bottom-10 {
   animation: slide-in-from-bottom 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
-/* ─── Tmavý mode – barva pro date input ─────────────────────────── */
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0);
-}
-
-.dark input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-}
+/* ─── Date input dark mode ──────────────────────────────────────── */
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0); }
+.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }

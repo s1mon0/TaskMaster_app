@@ -7,17 +7,13 @@ export default function MainArea({
   activeListId, listName, tasks, onBack, onAddTask,
   onToggleTask, onDeleteTask, onEditTask, onTaskClick,
   progress, newTaskText, setNewTaskText,
-  sortBy, setSortBy,   // z App.jsx – onDragEndTask musí znát aktuální řazení
+  sortBy, setSortBy,
 }) {
   const [hideCompleted, setHideCompleted] = useState(false);
 
   const displayedTasks = useMemo(() => {
     let result = [...tasks];
-
-    if (hideCompleted) {
-      result = result.filter(t => !t.is_done);
-    }
-
+    if (hideCompleted) result = result.filter(t => !t.is_done);
     if (sortBy === 'alpha') {
       result.sort((a, b) => a.text.localeCompare(b.text, 'cs'));
     } else if (sortBy === 'date') {
@@ -28,8 +24,6 @@ export default function MainArea({
         return new Date(a.due_date) - new Date(b.due_date);
       });
     }
-    // sortBy === 'manual' → pořadí z App.jsx (position) beze změny
-
     return result;
   }, [tasks, hideCompleted, sortBy]);
 
@@ -37,11 +31,18 @@ export default function MainArea({
 
   return (
     <div className={`flex-1 min-w-0 flex flex-col h-full relative ${!activeListId ? 'hidden md:flex' : 'flex'} md:p-3`}>
-      <div className="flex-1 bg-white dark:bg-[#151515] md:rounded-[24px] shadow-sm flex flex-col overflow-hidden border dark:border-gray-800 min-w-0">
+      {/*
+        FIX borderless na mobilu:
+        - Na mobilu (výchozí): žádný border, žádné rounded → plná obrazovka bez rámečků
+        - Na desktopu (md:): rounded-[24px] + border jako dříve
+        Pozadí musí být i na mobile stejné jako body (#f2f2f7 / black)
+        aby nebyly vidět hrany
+      */}
+      <div className="flex-1 bg-white dark:bg-[#151515] md:rounded-[24px] md:shadow-sm flex flex-col overflow-hidden md:border md:dark:border-gray-800 min-w-0">
 
         {/* Hlavička */}
         <div
-          className="px-6 pb-4 md:px-12 backdrop-blur-md"
+          className="px-6 pb-4 md:px-12"
           style={{ paddingTop: 'max(3rem, env(safe-area-inset-top))' }}
         >
           <div className="flex items-center gap-2 mb-4">
@@ -66,11 +67,9 @@ export default function MainArea({
             </span>
           </div>
 
-          {/* Ovládací panel – zobrazí se jen pokud jsou nějaké tasky */}
+          {/* Ovládací panel */}
           {tasks.length > 0 && (
             <div className="flex flex-wrap items-center gap-3 mt-5">
-
-              {/* Skrýt/zobrazit hotové */}
               <button
                 onClick={() => setHideCompleted(!hideCompleted)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -83,15 +82,12 @@ export default function MainArea({
                 {hideCompleted ? 'Zobrazit hotové' : 'Skrýt hotové'}
               </button>
 
-              {/* Přepínač řazení */}
               <div className="flex bg-gray-100 dark:bg-[#2c2c2e] rounded-lg p-0.5">
                 <button
                   onClick={() => setSortBy('manual')}
-                  title="Vlastní řazení (drag & drop)"
+                  title="Vlastní řazení"
                   className={`p-1.5 rounded-md transition-colors ${
-                    sortBy === 'manual'
-                      ? 'bg-white dark:bg-[#1c1c1e] text-[#007aff] shadow-sm'
-                      : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                    sortBy === 'manual' ? 'bg-white dark:bg-[#1c1c1e] text-[#007aff] shadow-sm' : 'text-gray-500'
                   }`}
                 >
                   <GripVertical size={16} />
@@ -100,9 +96,7 @@ export default function MainArea({
                   onClick={() => setSortBy('date')}
                   title="Podle termínu"
                   className={`p-1.5 rounded-md transition-colors ${
-                    sortBy === 'date'
-                      ? 'bg-white dark:bg-[#1c1c1e] text-[#007aff] shadow-sm'
-                      : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                    sortBy === 'date' ? 'bg-white dark:bg-[#1c1c1e] text-[#007aff] shadow-sm' : 'text-gray-500'
                   }`}
                 >
                   <CalendarClock size={16} />
@@ -111,9 +105,7 @@ export default function MainArea({
                   onClick={() => setSortBy('alpha')}
                   title="Podle abecedy"
                   className={`p-1.5 rounded-md transition-colors ${
-                    sortBy === 'alpha'
-                      ? 'bg-white dark:bg-[#1c1c1e] text-[#007aff] shadow-sm'
-                      : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                    sortBy === 'alpha' ? 'bg-white dark:bg-[#1c1c1e] text-[#007aff] shadow-sm' : 'text-gray-500'
                   }`}
                 >
                   <ArrowDownAZ size={16} />
@@ -125,24 +117,18 @@ export default function MainArea({
 
         {/* Seznam úkolů */}
         <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-28">
-
           {tasks.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full py-20 text-gray-300 dark:text-gray-600 select-none">
               <span className="text-5xl mb-3">✓</span>
               <p className="font-medium">Žádné úkoly</p>
             </div>
           )}
-
           {tasks.length > 0 && displayedTasks.length === 0 && (
             <div className="text-center py-10 text-gray-400 dark:text-gray-500">
               Všechny úkoly jsou hotové! 🎉
             </div>
           )}
-
-          <SortableContext
-            items={displayedTasks.map(t => t.id)}
-            strategy={verticalListSortingStrategy}
-          >
+          <SortableContext items={displayedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
             {displayedTasks.map(task => (
               <TaskItem
                 key={task.id}
@@ -157,7 +143,7 @@ export default function MainArea({
           </SortableContext>
         </div>
 
-        {/* Input bar – sticky, neschovává se za iOS klávesnicí */}
+        {/* Input bar */}
         <div
           className="sticky bottom-0 bg-white/90 dark:bg-[#151515]/90 backdrop-blur-md px-4 pt-2 md:px-12 border-t border-gray-100 dark:border-gray-800/50"
           style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
