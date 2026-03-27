@@ -36,7 +36,6 @@ export default function TaskItem({ task, onToggle, onClick, onDelete, onEdit, is
     boxShadow: isDragging ? '0 12px 40px rgba(0,0,0,0.18)' : undefined,
     position: 'relative',
     zIndex: isDragging ? 999 : 'auto',
-    touchAction: 'none',
   };
 
   const dotColor = task.color || null;

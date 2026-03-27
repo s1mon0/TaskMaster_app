@@ -21,7 +21,6 @@ export default function SidebarItem({ list, isActive, onClick, onDelete, onEdit,
     boxShadow: isDragging ? '0 8px 24px rgba(0,0,0,0.12)' : undefined,
     position: 'relative',
     zIndex: isDragging ? 999 : 'auto',
-    touchAction: 'none',
   };
 
   return (
