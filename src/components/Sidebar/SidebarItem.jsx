@@ -33,7 +33,7 @@ export default function SidebarItem({ list, isActive, onClick, onDelete, onEdit,
       onClick={() => !isEditing && onClick(list.id)}
       // FIX: odstraněny hover: třídy z Tailwindu – šedivěly při touch scrollu.
       // Hover efekt je řešen třídou list-item-hover v index.css přes @media (hover:hover)
-      className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+      className={`group flex items-center gap-2 px-3 py-3.5 md:py-2.5 rounded-xl cursor-pointer transition-colors ${
         isActive
           ? 'bg-[#007aff] text-white shadow-sm'
           : 'list-item-hover text-gray-700 dark:text-gray-300'
@@ -53,7 +53,7 @@ export default function SidebarItem({ list, isActive, onClick, onDelete, onEdit,
       {/* Ikona seznamu */}
       {IconComponent && (
         <div className={`shrink-0 ${isActive ? 'text-white' : 'text-[#007aff] dark:text-[#0a84ff]'}`}>
-          <IconComponent size={18} strokeWidth={2.5} />
+          <IconComponent size={20} strokeWidth={2.5} className="md:w-[18px] md:h-[18px]" />
         </div>
       )}
 
@@ -75,7 +75,7 @@ export default function SidebarItem({ list, isActive, onClick, onDelete, onEdit,
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className={`truncate text-[15px] font-medium block ${isActive ? 'text-white' : ''}`}>
+          <span className={`truncate text-[16px] md:text-[15px] font-medium block ${isActive ? 'text-white' : ''}`}>
             {list.name}
           </span>
         )}
