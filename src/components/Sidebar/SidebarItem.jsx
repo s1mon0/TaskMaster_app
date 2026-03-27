@@ -29,7 +29,8 @@ export default function SidebarItem({ list, isActive, onClick, onDelete, onEdit,
       ref={setNodeRef}
       style={style}
       onClick={() => !isEditing && onClick(list.id)}
-      className={`group flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${
+      // ZMĚNA ZDE: Na mobilu větší px-4 a py-3.5, na PC zpět na px-3 py-2.5
+      className={`group flex items-center gap-3 md:gap-2 px-4 py-3.5 md:px-3 md:py-2.5 rounded-2xl md:rounded-xl cursor-pointer transition-all ${
         isActive
           ? 'bg-[#007aff] text-white shadow-sm'
           : 'hover:bg-white dark:hover:bg-[#1c1c1e] text-gray-700 dark:text-gray-300'
@@ -46,12 +47,12 @@ export default function SidebarItem({ list, isActive, onClick, onDelete, onEdit,
         <GripVertical size={14} />
       </div>
 
-      {/* Čistá Lucide Ikona */}
+      {/* Čistá Lucide Ikona - na mobilu o něco větší */}
       <div className={`shrink-0 ${isActive ? 'text-white' : 'text-[#007aff] dark:text-[#0a84ff]'}`}>
-        {IconComponent && <IconComponent size={18} strokeWidth={2.5} />}
+        {IconComponent && <IconComponent size={20} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} />}
       </div>
 
-      {/* Název */}
+      {/* Název - na mobilu text-[17px], na počítači text-[15px] */}
       <div className="flex-1 min-w-0">
         {isEditing ? (
           <input
@@ -66,7 +67,7 @@ export default function SidebarItem({ list, isActive, onClick, onDelete, onEdit,
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className={`truncate text-[15px] font-medium block ${isActive ? 'text-white' : ''}`}>
+          <span className={`truncate text-[17px] md:text-[15px] font-medium block ${isActive ? 'text-white' : ''}`}>
             {list.name}
           </span>
         )}

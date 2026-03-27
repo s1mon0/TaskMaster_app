@@ -11,7 +11,7 @@ function getListIcon(name) {
   const n = name.toLowerCase();
   if (n.includes('práce') || n.includes('work')) return Briefcase;
   if (n.includes('nákup') || n.includes('shop')) return ShoppingCart;
-  if (n.includes('sport') || n.includes('gym') || n.includes('fitness')) return Dumbbell;
+  if (n.includes('workout') || n.includes('gym') || n.includes('fitness')) return Dumbbell;
   if (n.includes('doma') || n.includes('home') || n.includes('domov')) return Home;
   if (n.includes('čtení') || n.includes('kniha') || n.includes('book')) return Book;
   if (n.includes('cestování') || n.includes('trip') || n.includes('výlet')) return Plane;
