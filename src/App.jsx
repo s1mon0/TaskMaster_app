@@ -32,7 +32,7 @@ export default function App() {
   );
 
   if (session === undefined) return (
-    <div className="h-screen flex items-center justify-center dark:bg-black">
+    <div className="h-screen flex items-center justify-center dark:bg-[#151515]">
       <Loader2 className="animate-spin text-[#007aff]" size={48} />
     </div>
   );
@@ -40,7 +40,7 @@ export default function App() {
   if (!session) return <LoginPage isDarkMode={isDarkMode} />;
 
   if (isLoading) return (
-    <div className="h-screen flex items-center justify-center dark:bg-black">
+    <div className="h-screen flex items-center justify-center dark:bg-[#151515]">
       <Loader2 className="animate-spin text-[#007aff]" size={48} />
     </div>
   );
@@ -57,7 +57,7 @@ export default function App() {
     : 0;
 
   return (
-    <div className="flex h-[100dvh] bg-[#f2f2f7] dark:bg-black text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden transition-colors duration-300">
+    <div className="flex h-[100dvh] bg-[#f2f2f7] dark:bg-[#151515] text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden transition-colors duration-300">
 
       {error && (
         <div

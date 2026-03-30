@@ -31,13 +31,6 @@ export default function MainArea({
 
   return (
     <div className={`flex-1 min-w-0 flex flex-col h-full relative ${!activeListId ? 'hidden md:flex' : 'flex'} md:p-3`}>
-      {/*
-        FIX borderless na mobilu:
-        - Na mobilu (výchozí): žádný border, žádné rounded → plná obrazovka bez rámečků
-        - Na desktopu (md:): rounded-[24px] + border jako dříve
-        Pozadí musí být i na mobile stejné jako body (#f2f2f7 / black)
-        aby nebyly vidět hrany
-      */}
       <div className="flex-1 bg-white dark:bg-[#151515] md:rounded-[24px] md:shadow-sm flex flex-col overflow-hidden md:border md:dark:border-gray-800 min-w-0">
 
         {/* Hlavička */}
@@ -115,8 +108,8 @@ export default function MainArea({
           )}
         </div>
 
-        {/* Seznam úkolů */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-20">
+        {/* Seznam úkolů - OPRAVENO pb-20 na pb-6 */}
+        <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-6">
           {tasks.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full py-20 text-gray-300 dark:text-gray-600 select-none">
               <span className="text-5xl mb-3">✓</span>
@@ -143,9 +136,9 @@ export default function MainArea({
           </SortableContext>
         </div>
 
-        {/* Input bar */}
+        {/* Input bar - OPRAVENO pozadí pro mobilní safe area */}
         <div
-          className="bg-white/90 dark:bg-[#151515]/90 backdrop-blur-md px-4 pt-2 md:px-12 border-t border-gray-100 dark:border-gray-800/50"
+          className="bg-white dark:bg-[#151515] px-4 pt-2 md:px-12 border-t border-gray-100 dark:border-gray-800/50"
           style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
         >
           <form onSubmit={onAddTask} className="max-w-4xl mx-auto relative pb-2">

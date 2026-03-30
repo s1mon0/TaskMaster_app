@@ -104,11 +104,9 @@ export function useTaskMaster() {
         setLists(prev => [data[0], ...prev]);
         setNewListName('');
         setActiveListId(data[0].id);
-        haptics.light();
       }
     } catch (err) {
       setError(err.message);
-      haptics.error();
     }
   };
 
@@ -133,7 +131,6 @@ export function useTaskMaster() {
 
       setLists(prev => prev.filter(l => l.id !== id));
       if (activeListId === id) setActiveListId('my-day');
-      haptics.medium();
     } catch (err) {
       setError(err.message);
     }
@@ -195,11 +192,9 @@ export function useTaskMaster() {
       if (data?.[0]) {
         setTasks(prev => [...prev, data[0]]);
         setNewTaskText('');
-        haptics.light();
       }
     } catch (err) {
       setError(err.message);
-      haptics.error();
     }
   };
 
@@ -220,7 +215,6 @@ export function useTaskMaster() {
     const is_done = !task.is_done;
     const previousTasks = [...tasks];
     setTasks(tasks.map(t => t.id === task.id ? { ...t, is_done } : t));
-    haptics.light();
     try {
       setError(null);
       const { error } = await supabase.from('tasks').update({ is_done }).eq('id', task.id);
@@ -239,7 +233,6 @@ export function useTaskMaster() {
 
       setTasks(prev => prev.filter(t => t.id !== id));
       if (selectedTask?.id === id) setSelectedTask(null);
-      haptics.medium();
     } catch (err) {
       setError(err.message);
     }
@@ -274,7 +267,6 @@ export function useTaskMaster() {
     const newLists = arrayMove(lists, oldIndex, newIndex);
     const previousLists = [...lists];
     setLists(newLists);
-    haptics.light();
 
     try {
       setError(null);
@@ -319,7 +311,6 @@ export function useTaskMaster() {
     setTasks(prev =>
       prev.map(t => idToPos.has(t.id) ? { ...t, position: idToPos.get(t.id) } : t)
     );
-    haptics.light();
 
     try {
       setError(null);
