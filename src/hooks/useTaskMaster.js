@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { arrayMove } from '@dnd-kit/sortable';
-import { haptics } from '../lib/haptics';
 
 export function useTaskMaster() {
   const [session, setSession] = useState(undefined);
