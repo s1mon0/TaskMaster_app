@@ -57,7 +57,7 @@ export default function App() {
     : 0;
 
   return (
-    <div className="flex h-[100dvh] bg-[#f2f2f7] dark:bg-[#151515] text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden transition-colors duration-300">
+  <div className="flex h-full w-full bg-[#f2f2f7] dark:bg-[#151515] text-[#1c1c1e] dark:text-[#f5f5f7] font-sans antialiased overflow-hidden transition-colors duration-300">
 
       {error && (
         <div
