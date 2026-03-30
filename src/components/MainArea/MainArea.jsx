@@ -116,7 +116,7 @@ export default function MainArea({
         </div>
 
         {/* Seznam úkolů */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-28">
+        <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-20">
           {tasks.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full py-20 text-gray-300 dark:text-gray-600 select-none">
               <span className="text-5xl mb-3">✓</span>
@@ -145,10 +145,10 @@ export default function MainArea({
 
         {/* Input bar */}
         <div
-          className="sticky bottom-0 bg-white/90 dark:bg-[#151515]/90 backdrop-blur-md px-4 pt-2 md:px-12 border-t border-gray-100 dark:border-gray-800/50"
-          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+          className="bg-white/90 dark:bg-[#151515]/90 backdrop-blur-md px-4 pt-2 md:px-12 border-t border-gray-100 dark:border-gray-800/50"
+          style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
         >
-          <form onSubmit={onAddTask} className="max-w-4xl mx-auto relative">
+          <form onSubmit={onAddTask} className="max-w-4xl mx-auto relative pb-2">
             <input
               type="text"
               value={newTaskText}
@@ -159,7 +159,7 @@ export default function MainArea({
             <button
               type="submit"
               disabled={!newTaskText.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#007aff] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white p-2.5 rounded-xl transition-colors active:scale-95"
+              className="absolute right-2 top-[calc(50%-4px)] -translate-y-1/2 bg-[#007aff] disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white p-2.5 rounded-xl transition-colors active:scale-95"
             >
               <Plus size={20} />
             </button>

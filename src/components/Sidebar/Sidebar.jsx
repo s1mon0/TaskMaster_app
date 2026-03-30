@@ -109,7 +109,7 @@ export default function Sidebar({
       </div>
 
       {/* ── SCROLLOVATELNÝ OBSAH ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
 
         {/* Chytré přehledy */}
         <div>
